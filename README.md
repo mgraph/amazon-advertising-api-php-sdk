@@ -36,6 +36,20 @@ $client->registerProfile(array("countryCode" => "IT"));
 }
 ```
 
+## Tests
+### Unit tests
+
+```bash
+phpunit ClientTest.php
+```
+
+### Integration tests
+Copy credentials.xml.dist to credentials.xml and fill in API credentials
+```bash
+phpunit --configuration credentials.xml ClientIntegrationTest.php
+```
+
+
 ## Quick Start
 #### Instantiate the client
 > You can pass in `accessToken` if you do not have a refresh token.

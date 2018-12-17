@@ -1,5 +1,5 @@
 {
-    "name": "amzn/amazon-advertising-api-php-sdk",
+    "name": "creatissimo/amazon-advertising-api-php-sdk",
     "type": "library",
     "description": "Amazon Advertising API Client Library",
     "keywords": [
@@ -16,6 +16,10 @@
         {
             "name": "SSPA AIR Dev",
             "email": "nobody@amazon.com"
+        },
+        {
+            "name": "Marko Shemechko",
+            "email": "sheme4ko@gmail.com"
         }
     ],
     "autoload": {
@@ -30,7 +34,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/amzn/amazon-advertising-api-php-sdk"
+            "url": "https://github.com/creatissimo/amazon-advertising-api-php-sdk"
         }
     ]
 }

@@ -6,12 +6,12 @@ class CurlRequest
     private $handle = null;
     public $requestId = null;
 
-    public function __construct()
+    public function __construct($host = null)
     {
-        $this->reset();
+        $this->reset($host);
     }
 
-    public function reset()
+    public function reset($host = null)
     {
         $this->handle = curl_init();
         curl_setopt($this->handle, CURLOPT_PORT, 443);
@@ -32,6 +32,7 @@ class CurlRequest
 
     public function execute()
     {
+
         return curl_exec($this->handle);
     }
 
