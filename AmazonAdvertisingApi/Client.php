@@ -41,6 +41,8 @@ class Client
         $this->userAgent = "AdvertisingAPI PHP Client Library v{$this->applicationVersion}";
 
         $this->_validateConfig($config);
+
+
         $this->_validateConfigParameters();
         $this->_setEndpoints();
 
@@ -407,6 +409,14 @@ class Client
             }
         }
         return $req;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
     }
 
     private function _download($location, $gunzip = false)
