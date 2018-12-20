@@ -75,6 +75,105 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         $this->assertSuccessResponse($response, 207);
     }
 
+
+    public function testCreatePortfolios()
+    {
+        $data = array(
+            array(
+                'name'  => 'Test portfolio',
+                'state' => 'enabled',
+            )
+        );
+
+        $response = self::$client->createPortfolios($data);
+        $this->assertSuccessResponse($response, 207);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testListPortfolios()
+    {
+        $response = self::$client->listPortfolios([]);
+        $this->assertSuccessResponse($response);
+
+        return json_decode($response['response'], true);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testListPortfoliosEx()
+    {
+        $response = self::$client->listPortfoliosEx([]);
+        $this->assertSuccessResponse($response);
+
+        return json_decode($response['response'], true);
+    }
+
+
+    /**
+     * @depends testListPortfolios
+     * @param $portfolios
+     */
+    public function testUpdatePortfolios($portfolios)
+    {
+        $portfolio = array_shift($portfolios);
+
+        $data = array(
+            array(
+                'portfolioId' => $portfolio['portfolioId'],
+                'name'        => 'Test portfolio',
+                'state'       => 'enabled',
+            )
+        );
+
+        $response = self::$client->updatePortfolios($data);
+        $this->assertSuccessResponse($response, 207);
+    }
+
+
+    /**
+     * @depends testListPortfolios
+     * @param $portfolios
+     */
+    public function testGetPortfolio($portfolios)
+    {
+        $portfolio = array_shift($portfolios);
+
+        $response = self::$client->getPortfolio($portfolio['portfolioId']);
+        $this->assertSuccessResponse($response);
+    }
+
+    /**
+     * @depends testListPortfoliosEx
+     * @param $portfolios
+     */
+    public function testGetPortfolioEx($portfolios)
+    {
+        $portfolio = array_shift($portfolios);
+
+        $response = self::$client->getPortfolioEx($portfolio['portfolioId']);
+        $this->assertSuccessResponse($response);
+    }
+
+    public function testCreateCampaigns()
+    {
+        $campaings = array(
+            array(
+                'name'          => 'Test Campaign',
+                'targetingType' => 'auto',
+                "campaignType" => "sponsoredProducts",
+                'state'         => 'enabled',
+                'dailyBudget'   => 1,
+                'startDate'     => '20190101',
+            )
+        );
+
+        $response = self::$client->createCampaigns($campaings);
+        $this->assertSuccessResponse($response, 207);
+    }
+
     public function testListCampaigns()
     {
         $data = array(
@@ -126,23 +225,6 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         $this->assertSuccessResponse($response);
     }
 
-    public function testCreateCampaigns()
-    {
-        $campaings = array(
-            array(
-                'name'          => 'Test Campaign',
-                'targetingType' => 'manual',
-                'state'         => 'enabled',
-                'dailyBudget'   => 1,
-                'startDate'     => '20180101',
-            )
-        );
-
-        $response = self::$client->createCampaigns($campaings);
-        $this->assertSuccessResponse($response, 207);
-    }
-
-
     /**
      * @depends testListCampaigns
      * @param $campaings
@@ -167,6 +249,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     *
      * @depends testListCampaigns
      * @param $campaings
      */
@@ -810,9 +893,11 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         foreach ($successResponse as $responseItemName => $responseItemValue) {
             $this->assertArrayHasKey($responseItemName, $successResponse);
         }
+
+        $this->assertArrayHasKey('requestId', $actualResponse);
+
         $this->assertSame($successCode, $actualResponse['code']);
         $this->assertEquals(true, $actualResponse['success']);
-        $this->assertArrayHasKey('requestId', $actualResponse);
     }
 
 
