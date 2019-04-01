@@ -363,6 +363,43 @@ class Client
         return $this->_operation("productAds/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
     }
 
+
+    public function getTargetingClause($targetId)
+    {
+        return $this->_operation("targets/{$targetId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function getTargetingClauseEx($targetId)
+    {
+        return $this->_operation("targets/extended/{$targetId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function createTargetingClauses($data)
+    {
+        return $this->_operation("targets", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function updateTargetingClauses($data)
+    {
+        return $this->_operation("targets", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function archiveTargetingClause($targetId)
+    {
+        return $this->_operation("targets/{$targetId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function listTargetingClauses($data = null)
+    {
+        return $this->_operation("targets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function listTargetingClausesEx($data = null)
+    {
+        return $this->_operation("targets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+
     public function getAdGroupBidRecommendations($adGroupId)
     {
         return $this->_operation("adGroups/{$adGroupId}/bidRecommendations");
