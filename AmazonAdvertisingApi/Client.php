@@ -399,6 +399,55 @@ class Client
         return $this->_operation("targets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
     }
 
+    public function createTargetRecommendations($data = null)
+    {
+        return $this->_operation("targets/productRecommendations", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function getTargetingCategories($data = null)
+    {
+        return $this->_operation("targets/categories", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function getBrandRecommendations($data = null)
+    {
+        return $this->_operation("targets/brands", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function getNegativeTargetingClause($targetId)
+    {
+        return $this->_operation("negativeTargets/{$targetId}", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function getNegativeTargetingClauseEx($targetId)
+    {
+        return $this->_operation("negativeTargets/extended/{$targetId}", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function createNegativeTargetingClauses($data = null)
+    {
+        return $this->_operation("negativeTargets", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function listNegativeTargetingClauses($data = null)
+    {
+        return $this->_operation("negativeTargets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function listNegativeTargetingClausesEx($data = null)
+    {
+        return $this->_operation("negativeTargets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function archiveNegativeTargetingClause($targetId)
+    {
+        return $this->_operation("negativeTargets/{$targetId}", $data, 'DELETE', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function updateNegativeTargetingClauses($data = null)
+    {
+        return $this->_operation("negativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
+    }
 
     public function getAdGroupBidRecommendations($adGroupId)
     {

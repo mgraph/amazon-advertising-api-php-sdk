@@ -1,43 +1,47 @@
 <?php
+
 namespace AmazonAdvertisingApi;
+
+use PHPUnit\Framework\MockObject\MockObject;
 
 require_once "../AmazonAdvertisingApi/Client.php";
 
 class ClientTest extends \PHPUnit\Framework\TestCase
 {
-    private $client = null;
+    /** @var Client|MockObject $client */
+    private $client       = null;
     private $return_value = null;
-    private $config = array(
-        "clientId" => "amzn1.application-oa2-client.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    private $config       = array(
+        "clientId"     => "amzn1.application-oa2-client.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "clientSecret" => "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-        "region" => "na",
-        "accessToken" => "Atza%7Ctest",
+        "region"       => "na",
+        "accessToken"  => "Atza%7Ctest",
         "refreshToken" => "Atzr%7Ctest",
-        "sandbox" => true);
+        "sandbox"      => true);
 
 
     public function setUp()
     {
         $this->return_value = array(
-            "code" => "200",
-            "success" => true,
+            "code"      => "200",
+            "success"   => true,
             "requestId" => "test",
-            "response" => "SUCCESS");
+            "response"  => "SUCCESS");
 
         $this->client = $this->getMockBuilder("AmazonAdvertisingApi\Client")
-                             ->setConstructorArgs(array($this->config))
-                             ->setMethods(array("_executeRequest"))
-                             ->getMock();
+            ->setConstructorArgs(array($this->config))
+            ->setMethods(array("_executeRequest"))
+            ->getMock();
 
         $this->client->expects($this->any())
-             ->method("_executeRequest")
-             ->will($this->returnValue($this->return_value));
+            ->method("_executeRequest")
+            ->will($this->returnValue($this->return_value));
     }
 
 
     public function testValidateClientId()
     {
-        $testConfig = $this->config;
+        $testConfig             = $this->config;
         $testConfig["clientId"] = "bad";
         try {
             $client = new Client($testConfig);
@@ -48,7 +52,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateClientSecret()
     {
-        $testConfig = $this->config;
+        $testConfig                 = $this->config;
         $testConfig["clientSecret"] = "bad";
         try {
             $client = new Client($testConfig);
@@ -59,7 +63,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateRegion()
     {
-        $testConfig = $this->config;
+        $testConfig           = $this->config;
         $testConfig["region"] = "bad";
         try {
             $client = new Client($testConfig);
@@ -70,7 +74,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateAccessToken()
     {
-        $testConfig = $this->config;
+        $testConfig                = $this->config;
         $testConfig["accessToken"] = "bad";
         try {
             $client = new Client($testConfig);
@@ -81,7 +85,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateRefreshToken()
     {
-        $testConfig = $this->config;
+        $testConfig                 = $this->config;
         $testConfig["refreshToken"] = "bad";
         try {
             $client = new Client($testConfig);
@@ -92,7 +96,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateSandbox()
     {
-        $testConfig = $this->config;
+        $testConfig            = $this->config;
         $testConfig["sandbox"] = "bad";
         try {
             $client = new Client($testConfig);
@@ -364,6 +368,61 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $request = $this->client->listProductAdsEx();
         $this->assertEquals($this->return_value, $request);
     }
+
+    public function testGetTargetingClause()
+    {
+        $request = $this->client->getTargetingClause("test");
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testGetTargetingClauseEx()
+    {
+        $request = $this->client->getTargetingClauseEx("test");
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testCreateTargetingClauses()
+    {
+        $request = $this->client->createTargetingClauses("test");
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testUpdateTargetingClauses()
+    {
+        $request = $this->client->updateTargetingClauses("test");
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testArchiveTargetingClause()
+    {
+        $request = $this->client->archiveTargetingClause("test");
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testListTargetingClauses()
+    {
+        $request = $this->client->listTargetingClauses();
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testListTargetingClausesEx()
+    {
+        $request = $this->client->listTargetingClausesEx();
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testCreateTargetRecommendations()
+    {
+        $request = $this->client->createTargetRecommendations([]);
+        $this->assertEquals($this->return_value, $request);
+    }
+
+    public function testGetTargetingCategories()
+    {
+        $request = $this->client->getTargetingCategories([]);
+        $this->assertEquals($this->return_value, $request);
+    }
+
 
     public function testGetAdGroupBidRecommendations()
     {

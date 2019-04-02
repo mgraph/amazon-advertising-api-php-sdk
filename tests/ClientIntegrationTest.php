@@ -27,7 +27,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
         $response = self::$client->listProfiles();
         $profiles = json_decode($response['response'], true);
-        $profile = array_shift($profiles);
+        $profile  = array_shift($profiles);
 
         self::$client->profileId = $profile['profileId'];
     }
@@ -68,9 +68,9 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
     public function testUpdateProfiles()
     {
         $response = self::$client->updateProfiles(array(array(
-            'profileId'   => self::$client->profileId,
-            'dailyBudget' => 1,
-        )));
+                                                            'profileId'   => self::$client->profileId,
+                                                            'dailyBudget' => 1,
+                                                        )));
 
         $this->assertSuccessResponse($response, 207);
     }
@@ -114,6 +114,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListPortfolios
+     *
      * @param $portfolios
      */
     public function testUpdatePortfolios($portfolios)
@@ -135,6 +136,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListPortfolios
+     *
      * @param $portfolios
      */
     public function testGetPortfolio($portfolios)
@@ -147,6 +149,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListPortfoliosEx
+     *
      * @param $portfolios
      */
     public function testGetPortfolioEx($portfolios)
@@ -163,7 +166,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
             array(
                 'name'          => 'Test Campaign',
                 'targetingType' => 'auto',
-                "campaignType" => "sponsoredProducts",
+                "campaignType"  => "sponsoredProducts",
                 'state'         => 'enabled',
                 'dailyBudget'   => 1,
                 'startDate'     => '20190101',
@@ -204,6 +207,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListCampaigns
+     *
      * @param $campaings
      */
     public function testGetCampaign($campaings)
@@ -216,6 +220,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListCampaigns
+     *
      * @param $campaings
      */
     public function testGetCampaignEx($campaings)
@@ -227,6 +232,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListCampaigns
+     *
      * @param $campaings
      */
     public function testUpdateCampaigns($campaings)
@@ -251,6 +257,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
     /**
      *
      * @depends testListCampaigns
+     *
      * @param $campaings
      */
     public function testArchiveCampaign($campaings)
@@ -296,6 +303,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListAdGroups
+     *
      * @param $groups
      */
     public function testGetAdGroup($groups)
@@ -308,6 +316,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListAdGroupsEx
+     *
      * @param $groups
      */
     public function testGetAdGroupEx($groups)
@@ -335,6 +344,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListAdGroups
+     *
      * @param $groups
      */
     public function testUpdateAdGroups($groups)
@@ -397,22 +407,24 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListBiddableKeywords
+     *
      * @param $keywords
      */
     public function testGetBiddableKeyword($keywords)
     {
-        $keyword = array_shift($keywords);
+        $keyword  = array_shift($keywords);
         $response = self::$client->getBiddableKeyword($keyword['keywordId']);
         $this->assertSuccessResponse($response);
     }
 
     /**
      * @depends testListBiddableKeywordsEx
+     *
      * @param $keywords
      */
     public function testGetBiddableKeywordEx($keywords)
     {
-        $keyword = array_shift($keywords);
+        $keyword  = array_shift($keywords);
         $response = self::$client->getBiddableKeywordEx($keyword['keywordId']);
         $this->assertSuccessResponse($response);
     }
@@ -435,12 +447,13 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListBiddableKeywords
+     *
      * @param $keywords
      */
     public function testUpdateCreateBiddableKeywords($keywords)
     {
         $keyword = array_shift($keywords);
-        $data = array(
+        $data    = array(
             array(
                 'keywordId'   => $keyword['keywordId'],
                 'campaignId'  => 1,
@@ -457,6 +470,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListBiddableKeywords
+     *
      * @param $keywords
      */
     public function testArchiveBiddableKeyword($keywords)
@@ -468,7 +482,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     public function testListNegativeKeywords()
     {
-        $data = array(
+        $data     = array(
             'startIndex'  => 0,
             'count'       => 1,
             'stateFilter' => 'enabled',
@@ -481,7 +495,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     public function testListNegativeKeywordsEx()
     {
-        $data = array(
+        $data     = array(
             'startIndex'  => 0,
             'count'       => 1,
             'stateFilter' => 'enabled',
@@ -495,22 +509,24 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListNegativeKeywords
+     *
      * @param $keywords
      */
     public function testGetNegativeKeyword($keywords)
     {
-        $keyword = array_shift($keywords);
+        $keyword  = array_shift($keywords);
         $response = self::$client->getNegativeKeyword($keyword['keywordId']);
         $this->assertSuccessResponse($response);
     }
 
     /**
      * @depends testListNegativeKeywordsEx
+     *
      * @param $keywords
      */
     public function testGetNegativeKeywordEx($keywords)
     {
-        $keyword = array_shift($keywords);
+        $keyword  = array_shift($keywords);
         $response = self::$client->getNegativeKeywordEx($keyword['keywordId']);
         $this->assertSuccessResponse($response);
     }
@@ -533,12 +549,13 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListNegativeKeywords
+     *
      * @param $keywords
      */
     public function testUpdateNegativeKeywords($keywords)
     {
         $keyword = array_shift($keywords);
-        $data = array(
+        $data    = array(
             array(
                 'keywordId'   => $keyword['keywordId'],
                 'campaignId'  => 1,
@@ -597,11 +614,12 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListCampaignNegativeKeywords
+     *
      * @param $keywords
      */
     public function testGetCampaignNegativeKeyword($keywords)
     {
-        $keyword = array_shift($keywords);
+        $keyword  = array_shift($keywords);
         $response = self::$client->getCampaignNegativeKeyword($keyword['keywordId']);
         $this->assertSuccessResponse($response);
     }
@@ -609,11 +627,12 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListCampaignNegativeKeywords
+     *
      * @param $keywords
      */
     public function testGetCampaignNegativeKeywordEx($keywords)
     {
-        $keyword = array_shift($keywords);
+        $keyword  = array_shift($keywords);
         $response = self::$client->getCampaignNegativeKeywordEx($keyword['keywordId']);
         $this->assertSuccessResponse($response);
     }
@@ -635,12 +654,13 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListCampaignNegativeKeywords
+     *
      * @param $keywords
      */
     public function testUpdateCampaignNegativeKeywords($keywords)
     {
         $keyword = array_shift($keywords);
-        $data = array(
+        $data    = array(
             array(
                 'keywordId'   => $keyword['keywordId'],
                 'campaignId'  => 1,
@@ -692,6 +712,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListProductAds
+     *
      * @param $products
      */
     public function testGetProductAd($products)
@@ -704,6 +725,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListProductAdsEx
+     *
      * @param $products
      */
     public function testGetProductAdEx($products)
@@ -716,6 +738,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListAdGroups
+     *
      * @param $adGropups
      */
     public function testCreateProductAds($adGropups)
@@ -737,6 +760,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListAdGroups
+     *
      * @param $adGropups
      */
     public function testUpdateProductAds($adGropups)
@@ -764,9 +788,105 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     }
 
+    /**
+     * @depends testListAdGroups
+     * @depends testListCampaigns
+     *
+     * @param $adGropups
+     * @param $campaings
+     */
+    public function testCreateTargetingClauses($adGropups, $campaings)
+    {
+        $adGroup  = array_shift($adGropups);
+        $campaign = array_shift($campaings);
+
+        $data = array(
+            array(
+                'adGroupId'      => $adGroup['adGroupId'],
+                'campaignId'     => $campaign['campaignId'],
+                'state'          => 'enabled',
+                'expression'     => [
+                    [
+                        "type"  => "asinSameAs",
+                        "value" => "Test Value"
+                    ],
+                ],
+                'expressionType' => 'auto',
+                'bid'            => 0.02,
+            )
+        );
+
+        $response = self::$client->createTargetingClauses($data);
+        $this->assertSuccessResponse($response, 207);
+    }
+
+    public function testListTargetingClauses()
+    {
+        $data = array(
+            'startIndex'  => 0,
+            'count'       => 1,
+            'stateFilter' => 'enabled',
+        );
+
+        $response = self::$client->listTargetingClauses($data);
+        $this->assertSuccessResponse($response);
+
+        return json_decode($response['response'], true);
+    }
+
+    public function testListTargetingClausesEx()
+    {
+        $data = array(
+            'startIndex'  => 0,
+            'count'       => 1,
+            'stateFilter' => 'enabled',
+        );
+
+        $response = self::$client->listTargetingClausesEx($data);
+        $this->assertSuccessResponse($response);
+
+        return json_decode($response['response'], true);
+    }
+
+    public function testGetTargetingClause()
+    {
+        $response = self::$client->getTargetingClause('test');
+        $this->assertNotFoundResponse($response);
+    }
+
+    public function testGetTargetingClauseEx()
+    {
+        $response = self::$client->getTargetingClauseEx('test');
+        $this->assertNotFoundResponse($response);
+    }
+
+    public function testUpdateTargetingClauses()
+    {
+        $response = self::$client->updateTargetingClauses([[]]);
+        $this->assertInvalidRequestResponse($response);
+    }
+
+    public function testArchiveTargetingClause()
+    {
+        $response = self::$client->archiveTargetingClause("test");
+        $this->assertNotFoundResponse($response);
+    }
+
+    public function testCreateTargetRecommendations()
+    {
+        $data = [
+            'pageSize'   => 1,
+            'pageNumber' => 1,
+            'asins'      => ['asin'],
+        ];
+
+        $response = self::$client->createTargetRecommendations($data);
+        $this->assertSuccessResponse($response);
+    }
 
     /**
      * @depends testListAdGroups
+     *
      * @param $groups
      */
     public function testGetAdGroupBidRecommendations($groups)
@@ -781,6 +901,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListBiddableKeywords
+     *
      * @param $keywords
      */
     public function testGetKeywordBidRecommendations($keywords)
@@ -793,6 +914,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListBiddableKeywords
+     *
      * @param $keywords
      */
     public function testBulkGetKeywordBidRecommendations($keywords)
@@ -805,6 +927,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListAdGroups
+     *
      * @param $groups
      */
     public function testGetAdGroupKeywordSuggestions($groups)
@@ -818,6 +941,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testListAdGroups
+     *
      * @param $groups
      */
     public function testGetAdGroupKeywordSuggestionsEx($groups)
@@ -860,6 +984,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @depends testRequestSnapshot
+     *
      * @param $snapshot
      */
     public function testGetSnapshot($snapshot)
@@ -898,6 +1023,37 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame($successCode, $actualResponse['code']);
         $this->assertEquals(true, $actualResponse['success']);
+    }
+
+
+    private function assertNotFoundResponse($actualResponse, $code = 404)
+    {
+        $response = array(
+            "code"    => $code,
+            "success" => false,
+        );
+
+        foreach ($response as $responseItemName => $responseItemValue) {
+            $this->assertArrayHasKey($responseItemName, $response);
+        }
+
+        $this->assertSame($code, $actualResponse['code']);
+        $this->assertEquals(false, $actualResponse['success']);
+    }
+
+    private function assertInvalidRequestResponse($actualResponse, $code = 422)
+    {
+        $response = array(
+            "code"    => $code,
+            "success" => false,
+        );
+
+        foreach ($response as $responseItemName => $responseItemValue) {
+            $this->assertArrayHasKey($responseItemName, $response);
+        }
+
+        $this->assertSame($code, $actualResponse['code']);
+        $this->assertEquals(false, $actualResponse['success']);
     }
 
 
