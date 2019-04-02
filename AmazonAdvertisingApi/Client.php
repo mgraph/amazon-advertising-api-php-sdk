@@ -122,6 +122,7 @@ class Client
     {
         return $this->_operation("profiles", $data, "PUT");
     }
+    
 
     public function getPortfolio($portfolioId)
     {

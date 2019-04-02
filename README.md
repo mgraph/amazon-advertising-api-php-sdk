@@ -1,6 +1,6 @@
 ## Synopsis
 
-Official Amazon Advertising API PHP client library.
+Official Amazon Advertising V2 API PHP client library.
 
 ## Requirements
 
