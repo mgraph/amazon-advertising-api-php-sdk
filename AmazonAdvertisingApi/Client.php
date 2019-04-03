@@ -6,11 +6,12 @@ require_once "Versions.php";
 require_once "CampaignTypes.php";
 require_once "Regions.php";
 require_once "CurlRequest.php";
+require_once "Constants.php";
 
 class Client
 {
-    public const RETRY_SLEEP_TIME     = 5;
-    public const MAX_RETRYS           = 30;
+    public const RETRY_SLEEP_TIME = 5;
+    public const MAX_RETRIES      = 30;
 
     public static $http_codes_temp_issue = [429, 500];
 
@@ -181,22 +182,35 @@ class Client
 
     public function archiveCampaign($campaignId, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        $this->archiveNegativeCampaignKeywords($campainType, $campainType);
+        $this->archiveNegativeCampaignKeywords($campaignId, $campainType);
+        $this->archiveCampaignAdGroups($campaignId);
 
+        return $this->_operation("campaigns/{$campaignId}", null, "DELETE", $campainType);
+    }
+
+    private function archiveCampaignAdGroups($campaignId)
+    {
         $startIndex = 0;
-        while(true) {
-            $adGroupListResponse = $this->listAdGroups([Constants::FILTER_CAMPAIGN_ID => $campaignId, Constants::FILTER_STARTINDEX => $startIndex, Constants::FILTER_STATE => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])]);
-            $adGroups            = json_decode($adGroupListResponse['response'], true);
+
+        while (true) {
+            $adGroupListResponse = $this->listAdGroups([
+                Constants::FILTER_CAMPAIGN_ID => $campaignId,
+                Constants::FILTER_STARTINDEX  => $startIndex,
+                Constants::FILTER_STATE       => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])
+            ]);
+
+            $adGroups = json_decode($adGroupListResponse['response'], true);
+
             if (\count($adGroups) === 0) {
                 break;
             }
+
             foreach ($adGroups as $adGroup) {
-                $this->archiveAdGroup($adGroup);
+                $this->archiveAdGroup($adGroup[Constants::AD_ADGROUP_ID]);
             }
+
             $startIndex++;
         }
-
-        return $this->_operation("campaigns/{$campaignId}", null, "DELETE", $campainType);
     }
 
     private function archiveKeywordsByAdGroup($adGroupId)
@@ -208,23 +222,39 @@ class Client
     private function archiveBiddableKeywordsByAdGroup($adGroupId)
     {
         $startIndex = 0;
+
         while (true) {
-            $keywordListResponse = $this->listBiddableKeywords([Constants::FILTER_ADGROUP_ID => $adGroupId, Constants::FILTER_STARTINDEX => $startIndex, Constants::FILTER_STATE => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])]);
-            if($keywordListResponse['code'] !== 200) {
+            $keywordListResponse = $this->listBiddableKeywords([
+                    Constants::FILTER_ADGROUP_ID => $adGroupId,
+                    Constants::FILTER_STARTINDEX => $startIndex,
+                    Constants::FILTER_STATE      => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])]
+            );
+
+            if ($keywordListResponse['code'] !== 200) {
                 throw new \Exception('Unable to load biddable keywords list for archiveBiddableKeywordsByAdGroup');
             }
-            $keywords            = json_decode($keywordListResponse['response'], true);
+
+            $keywords = json_decode($keywordListResponse['response'], true);
+
             if (\count($keywords) === 0) {
                 break;
             }
+
             foreach ($keywords as $keyword) {
-                if(isset($keyword[Constants::KEYWORD_ID])) {
-                    $response = $this->archiveBiddableKeyword($keyword[Constants::KEYWORD_ID]);
-                    if($response['code'] !== 200) {
-                        throw new \Exception(sprintf('Unable to archive biddable keyword %d clause in  archiveBiddableKeywordsByAdGroup', $keyword[Constants::KEYWORD_ID]));
-                    }
+                if (!isset($keyword[Constants::KEYWORD_ID])) {
+                    continue;
+                }
+
+                $response = $this->archiveBiddableKeyword($keyword[Constants::KEYWORD_ID]);
+
+                if ($response['code'] !== 200) {
+                    throw new \Exception(sprintf(
+                        'Unable to archive biddable keyword %d clause in  archiveBiddableKeywordsByAdGroup',
+                        $keyword[Constants::KEYWORD_ID]
+                    ));
                 }
             }
+
             $startIndex++;
         }
     }
@@ -232,23 +262,39 @@ class Client
     private function archiveNegativeKeywordsByAdGroup($adGroupId)
     {
         $startIndex = 0;
+
         while (true) {
-            $keywordListResponse = $this->listNegativeKeywords([Constants::FILTER_ADGROUP_ID => $adGroupId, Constants::FILTER_STARTINDEX => $startIndex, Constants::FILTER_STATE => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])]);
-            if($keywordListResponse['code'] !== 200) {
+            $keywordListResponse = $this->listNegativeKeywords([
+                Constants::FILTER_ADGROUP_ID => $adGroupId,
+                Constants::FILTER_STARTINDEX => $startIndex,
+                Constants::FILTER_STATE      => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])
+            ]);
+
+            if ($keywordListResponse['code'] !== 200) {
                 throw new \Exception('Unable to load negative keywords list for archiveNegativeKeywordsByAdGroup');
             }
-            $keywords            = json_decode($keywordListResponse['response'], true);
+
+            $keywords = json_decode($keywordListResponse['response'], true);
+
             if (\count($keywords) === 0) {
                 break;
             }
+
             foreach ($keywords as $keyword) {
-                if(isset($keyword[Constants::KEYWORD_ID])) {
-                    $response = $this->archiveNegativeKeyword($keyword[Constants::KEYWORD_ID]);
-                    if($response['code'] !== 200) {
-                        throw new \Exception(sprintf('Unable to archive negative keyword %d clause in  archiveNegativeKeywordsByAdGroup', $keyword[Constants::KEYWORD_ID]));
-                    }
+                if (!isset($keyword[Constants::KEYWORD_ID])) {
+                    continue;
+                }
+
+                $response = $this->archiveNegativeKeyword($keyword[Constants::KEYWORD_ID]);
+
+                if ($response['code'] !== 200) {
+                    throw new \Exception(sprintf(
+                        'Unable to archive negative keyword %d clause in  archiveNegativeKeywordsByAdGroup',
+                        $keyword[Constants::KEYWORD_ID]
+                    ));
                 }
             }
+
             $startIndex++;
         }
     }
@@ -258,24 +304,40 @@ class Client
         if ($campainType === CampaignTypes::SPONSORED_BRANDS) {
             return;
         }
+
         $startIndex = 0;
+
         while (true) {
-            $keywordListResponse = $this->listCampaignNegativeKeywords([Constants::FILTER_CAMPAIGN_ID => $campaignId, Constants::FILTER_STARTINDEX => $startIndex]);
-            if($keywordListResponse['code'] !== 200) {
+            $keywordListResponse = $this->listCampaignNegativeKeywords([
+                Constants::FILTER_CAMPAIGN_ID => $campaignId,
+                Constants::FILTER_STARTINDEX  => $startIndex
+            ]);
+
+            if ($keywordListResponse['code'] !== 200) {
                 throw new \Exception('Unable to load campaign negative keywords list for archiveNegativeCampaignKeywords');
             }
-            $keywords            = json_decode($keywordListResponse['response'], true);
+
+            $keywords = json_decode($keywordListResponse['response'], true);
+
             if (\count($keywords) === 0) {
                 break;
             }
+
             foreach ($keywords as $keyword) {
-                if(isset($keyword[Constants::KEYWORD_ID])) {
-                    $response = $this->archiveNegativeCampaignKeywords($keyword[Constants::KEYWORD_ID]);
-                    if($response['code'] !== 200) {
-                        throw new \Exception(sprintf('Unable to archive campaign negative keyword %d clause in  archiveNegativeCampaignKeywords', $keyword[Constants::KEYWORD_ID]));
-                    }
+                if (!isset($keyword[Constants::KEYWORD_ID])) {
+                    continue;
+                }
+
+                $response = $this->removeCampaignNegativeKeyword($keyword[Constants::KEYWORD_ID]);
+
+                if ($response['code'] !== 200) {
+                    throw new \Exception(sprintf(
+                        'Unable to archive campaign negative keyword %d clause in archiveNegativeCampaignKeywords',
+                        $keyword[Constants::KEYWORD_ID]
+                    ));
                 }
             }
+
             $startIndex++;
         }
     }
@@ -283,23 +345,38 @@ class Client
     private function archiveAdsByAdGroup($adGroupId)
     {
         $startIndex = 0;
-        while(true) {
-            $adListResponse = $this->listProductAds(['adGroupIdFilter' => $adGroupId, 'startIndex' => $startIndex, 'stateFilter' => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])]);
-            if($adListResponse['code'] !== 200) {
+
+        while (true) {
+            $adListResponse = $this->listProductAds([
+                Constants::FILTER_ADGROUP_ID => $adGroupId,
+                Constants::FILTER_STARTINDEX => $startIndex,
+                Constants::FILTER_STATE      => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])
+            ]);
+
+            if ($adListResponse['code'] !== 200) {
                 throw new \Exception('Unable to load adGroup list for archiveAdsByAdGroup');
             }
-            $ads            = json_decode($adListResponse['response'], true);
+
+            $ads = json_decode($adListResponse['response'], true);
+
             if (\count($ads) === 0) {
                 break;
             }
+
             foreach ($ads as $ad) {
-                if(isset($ad[Constants::AD_ID])) {
-                    $response = $this->archiveProductAd($ad[Constants::AD_ID]);
-                    if($response['code'] !== 200) {
-                        throw new \Exception(sprintf('Unable to archive adGroup %d clause in  archiveAdsByAdGroup', $ad[Constants::AD_ID]));
-                    }
+                if (!isset($ad[Constants::AD_ID])) {
+                    continue;
+                }
+
+                $response = $this->archiveProductAd($ad[Constants::AD_ID]);
+
+                if ($response['code'] !== 200) {
+                    throw new \Exception(sprintf(
+                        'Unable to archive adGroup %d clause in  archiveAdsByAdGroup', $ad[Constants::AD_ID]
+                    ));
                 }
             }
+
             $startIndex++;
         }
     }
@@ -339,6 +416,7 @@ class Client
         $this->archiveKeywordsByAdGroup($adGroupId);
         $this->archiveAdsByAdGroup($adGroupId);
         $this->archiveTargetingClausesByAdGroup($adGroupId);
+
         return $this->_operation("adGroups/{$adGroupId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
@@ -492,7 +570,6 @@ class Client
         return $this->_operation("productAds/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-
     public function getTargetingClause($targetId)
     {
         return $this->_operation("targets/{$targetId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
@@ -518,6 +595,17 @@ class Client
         return $this->_operation("targets/{$targetId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
+    public function getTargetingCategories($data)
+    {
+        return $this->_operation("targets/categories", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function getBrandRecommendations($data)
+    {
+        return $this->_operation("targets/brands", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+
     /**
      * @param $adGroupId
      *
@@ -529,23 +617,39 @@ class Client
         return;
 
         $startIndex = 0;
+
         while (true) {
-            $targetistResponse = $this->listTargetingClauses([Constants::FILTER_ADGROUP_ID => $adGroupId, Constants::FILTER_STARTINDEX => $startIndex, Constants::FILTER_STATE => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])]);
-            if($targetistResponse['code'] !== 200) {
+            $targetistResponse = $this->listTargetingClauses([
+                Constants::FILTER_ADGROUP_ID => $adGroupId,
+                Constants::FILTER_STARTINDEX => $startIndex,
+                Constants::FILTER_STATE      => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])
+            ]);
+
+            if ($targetistResponse['code'] !== 200) {
                 throw new \Exception('Unable to load targeting clauses list for archiveTargetingClausesByAdGroup');
             }
-            $targets            = json_decode($targetistResponse['response'], true);
+
+            $targets = json_decode($targetistResponse['response'], true);
+
             if (\count($targets) === 0) {
                 break;
             }
+
             foreach ($targets as $target) {
-                if(isset($target[Constants::TARGET_ID])) {
-                    $response = $this->archiveTargetingClause($target[Constants::TARGET_ID]);
-                    if($response['code'] !== 200) {
-                        throw new \Exception(sprintf('Unable to archive targeting %d clause in  archiveTargetingClausesByAdGroup', $target[Constants::TARGET_ID]));
-                    }
+                if (!isset($target[Constants::TARGET_ID])) {
+                    continue;
+                }
+
+                $response = $this->archiveTargetingClause($target[Constants::TARGET_ID]);
+
+                if ($response['code'] !== 200) {
+                    throw new \Exception(sprintf(
+                        'Unable to archive targeting %d clause in  archiveTargetingClausesByAdGroup',
+                        $target[Constants::TARGET_ID]
+                    ));
                 }
             }
+
             $startIndex++;
         }
     }
@@ -743,7 +847,7 @@ class Client
             return $this->_download($response_info["redirect_url"], true);
         }
 
-        if (in_array($response_info["http_code"], self::$http_codes_temp_issue) && $this->retryCounter < self::MAX_RETRYS) {
+        if (in_array($response_info["http_code"], self::$http_codes_temp_issue) && $this->retryCounter < self::MAX_RETRIES) {
             sleep(self::RETRY_SLEEP_TIME);
             $this->retryCounter++;
             $this->_executeRequest($request);
@@ -778,7 +882,7 @@ class Client
 
         foreach ($config as $k => $v) {
             if (array_key_exists($k, $this->config)) {
-                $this->config[ $k ] = $v;
+                $this->config[$k] = $v;
             } else {
                 $this->_logAndThrow("Unknown parameter '{$k}' in config.");
             }
@@ -839,7 +943,7 @@ class Client
             } else {
                 $this->endpoint = "https://{$this->endpoints[$region_code]["prod"]}/{$this->apiVersion}";
             }
-            $this->tokenUrl = $this->endpoints[ $region_code ]["tokenUrl"];
+            $this->tokenUrl = $this->endpoints[$region_code]["tokenUrl"];
         } else {
             $this->_logAndThrow("Invalid region.");
         }
