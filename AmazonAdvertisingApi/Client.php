@@ -199,6 +199,10 @@ class Client
                 Constants::FILTER_STATE       => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])
             ]);
 
+            if ($adGroupListResponse['code'] !== 200) {
+                throw new \Exception('Unable to load adGroups list for archiveCampaignAdGroups');
+            }
+
             $adGroups = json_decode($adGroupListResponse['response'], true);
 
             if (\count($adGroups) === 0) {
