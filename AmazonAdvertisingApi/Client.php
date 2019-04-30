@@ -844,17 +844,18 @@ class Client
         $response        = $request->execute();
         $this->requestId = $request->requestId;
         $response_info   = $request->getInfo();
-        $request->close();
-
-        if ($response_info["http_code"] == 307) {
-            /* application/octet-stream */
-            return $this->_download($response_info["redirect_url"], true);
-        }
 
         if (in_array($response_info["http_code"], self::$http_codes_temp_issue) && $this->retryCounter < self::MAX_RETRIES) {
             sleep(self::RETRY_SLEEP_TIME);
             $this->retryCounter++;
             $this->_executeRequest($request);
+        }
+
+        $request->close();
+
+        if ($response_info["http_code"] == 307) {
+            /* application/octet-stream */
+            return $this->_download($response_info["redirect_url"], true);
         }
 
         if (!preg_match("/^(2|3)\d{2}$/", $response_info["http_code"])) {
