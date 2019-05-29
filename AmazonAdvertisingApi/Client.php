@@ -10,8 +10,9 @@ require_once "Constants.php";
 
 class Client
 {
-    public const RETRY_SLEEP_TIME = 5;
-    public const MAX_RETRIES      = 30;
+    public const RETRY_SLEEP_TIME    = 5;
+    public const MAX_RETRIES         = 30;
+    public const SERVER_IS_BUSY_CODE = 'SERVER_IS_BUSY';
 
     public static $http_codes_temp_issue = [429, 500];
 
@@ -210,7 +211,7 @@ class Client
             }
 
             foreach ($adGroups as $adGroup) {
-                $this->archiveAdGroup($adGroup[Constants::AD_ADGROUP_ID]);
+                $this->archiveAdGroup($adGroup[ Constants::AD_ADGROUP_ID ]);
             }
 
             $startIndex++;
@@ -245,16 +246,16 @@ class Client
             }
 
             foreach ($keywords as $keyword) {
-                if (!isset($keyword[Constants::KEYWORD_ID])) {
+                if (!isset($keyword[ Constants::KEYWORD_ID ])) {
                     continue;
                 }
 
-                $response = $this->archiveBiddableKeyword($keyword[Constants::KEYWORD_ID]);
+                $response = $this->archiveBiddableKeyword($keyword[ Constants::KEYWORD_ID ]);
 
                 if ($response['code'] !== 200) {
                     throw new \Exception(sprintf(
                         'Unable to archive biddable keyword %d clause in  archiveBiddableKeywordsByAdGroup',
-                        $keyword[Constants::KEYWORD_ID]
+                        $keyword[ Constants::KEYWORD_ID ]
                     ));
                 }
             }
@@ -285,16 +286,16 @@ class Client
             }
 
             foreach ($keywords as $keyword) {
-                if (!isset($keyword[Constants::KEYWORD_ID])) {
+                if (!isset($keyword[ Constants::KEYWORD_ID ])) {
                     continue;
                 }
 
-                $response = $this->archiveNegativeKeyword($keyword[Constants::KEYWORD_ID]);
+                $response = $this->archiveNegativeKeyword($keyword[ Constants::KEYWORD_ID ]);
 
                 if ($response['code'] !== 200) {
                     throw new \Exception(sprintf(
                         'Unable to archive negative keyword %d clause in  archiveNegativeKeywordsByAdGroup',
-                        $keyword[Constants::KEYWORD_ID]
+                        $keyword[ Constants::KEYWORD_ID ]
                     ));
                 }
             }
@@ -328,16 +329,16 @@ class Client
             }
 
             foreach ($keywords as $keyword) {
-                if (!isset($keyword[Constants::KEYWORD_ID])) {
+                if (!isset($keyword[ Constants::KEYWORD_ID ])) {
                     continue;
                 }
 
-                $response = $this->removeCampaignNegativeKeyword($keyword[Constants::KEYWORD_ID]);
+                $response = $this->removeCampaignNegativeKeyword($keyword[ Constants::KEYWORD_ID ]);
 
                 if ($response['code'] !== 200) {
                     throw new \Exception(sprintf(
                         'Unable to archive campaign negative keyword %d clause in archiveNegativeCampaignKeywords',
-                        $keyword[Constants::KEYWORD_ID]
+                        $keyword[ Constants::KEYWORD_ID ]
                     ));
                 }
             }
@@ -368,15 +369,15 @@ class Client
             }
 
             foreach ($ads as $ad) {
-                if (!isset($ad[Constants::AD_ID])) {
+                if (!isset($ad[ Constants::AD_ID ])) {
                     continue;
                 }
 
-                $response = $this->archiveProductAd($ad[Constants::AD_ID]);
+                $response = $this->archiveProductAd($ad[ Constants::AD_ID ]);
 
                 if ($response['code'] !== 200) {
                     throw new \Exception(sprintf(
-                        'Unable to archive adGroup %d clause in  archiveAdsByAdGroup', $ad[Constants::AD_ID]
+                        'Unable to archive adGroup %d clause in  archiveAdsByAdGroup', $ad[ Constants::AD_ID ]
                     ));
                 }
             }
@@ -640,16 +641,16 @@ class Client
             }
 
             foreach ($targets as $target) {
-                if (!isset($target[Constants::TARGET_ID])) {
+                if (!isset($target[ Constants::TARGET_ID ])) {
                     continue;
                 }
 
-                $response = $this->archiveTargetingClause($target[Constants::TARGET_ID]);
+                $response = $this->archiveTargetingClause($target[ Constants::TARGET_ID ]);
 
                 if ($response['code'] !== 200) {
                     throw new \Exception(sprintf(
                         'Unable to archive targeting %d clause in  archiveTargetingClausesByAdGroup',
-                        $target[Constants::TARGET_ID]
+                        $target[ Constants::TARGET_ID ]
                     ));
                 }
             }
@@ -887,7 +888,7 @@ class Client
 
         foreach ($config as $k => $v) {
             if (array_key_exists($k, $this->config)) {
-                $this->config[$k] = $v;
+                $this->config[ $k ] = $v;
             } else {
                 $this->_logAndThrow("Unknown parameter '{$k}' in config.");
             }
@@ -948,7 +949,7 @@ class Client
             } else {
                 $this->endpoint = "https://{$this->endpoints[$region_code]["prod"]}/{$this->apiVersion}";
             }
-            $this->tokenUrl = $this->endpoints[$region_code]["tokenUrl"];
+            $this->tokenUrl = $this->endpoints[ $region_code ]["tokenUrl"];
         } else {
             $this->_logAndThrow("Invalid region.");
         }
