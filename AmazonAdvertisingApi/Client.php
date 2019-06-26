@@ -236,7 +236,7 @@ class Client
             );
 
             if ($keywordListResponse['code'] !== 200) {
-                throw new \Exception('Unable to load biddable keywords list for archiveBiddableKeywordsByAdGroup');
+                throw new \Exception('Unable to load biddable keywords list for archiveBiddableKeywordsByAdGroup. Response Code : ' . $keywordListResponse['code']);
             }
 
             $keywords = json_decode($keywordListResponse['response'], true);
