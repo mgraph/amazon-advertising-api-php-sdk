@@ -10,6 +10,9 @@ class Constants
     public const STATE_PAUSED   = 'paused';
     public const STATE_ARCHIVED = 'archived';
 
+    public const MATCH_TYPE_NEGATIVE_EXACT  = 'negativeExact';
+    public const MATCH_TYPE_NEGATIVE_PHRASE = 'negativePhrase';
+
     public const CAMPAIGN_PORTFOLIO_ID           = 'portfolioId';
     public const CAMPAIGN_ID                     = 'campaignId';
     public const CAMPAIGN_NAME                   = 'name';
