@@ -9,6 +9,7 @@ class Constants
     public const STATE_ENABLED  = 'enabled';
     public const STATE_PAUSED   = 'paused';
     public const STATE_ARCHIVED = 'archived';
+    public const STATE_DELETED  = 'deleted';
 
     public const MATCH_TYPE_NEGATIVE_EXACT  = 'negativeExact';
     public const MATCH_TYPE_NEGATIVE_PHRASE = 'negativePhrase';
