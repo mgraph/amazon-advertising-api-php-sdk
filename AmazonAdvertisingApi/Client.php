@@ -313,10 +313,13 @@ class Client
             $keywordsToUpdate = [];
 
             foreach ($keywords as $keyword) {
-                if (isset($keyword[$itemIdKey])) {
-                    $keywordsToUpdate[] = [$itemIdKey => $keyword[$itemIdKey], Constants::AD_STATE => $state];
-                    $processedCount++;
+                if (!isset($keyword[$itemIdKey]) ||
+                    ($type === 'TargetingClauses' && $keyword[Constants::TARGET_EXPRESSION_TYPE] === Constants::TARGET_EXPRESSION_TYPE_AUTO)) {
+                    continue;
                 }
+
+                $keywordsToUpdate[] = [$itemIdKey => $keyword[$itemIdKey], Constants::AD_STATE => $state];
+                $processedCount++;
             }
 
             $keywordsToUpdateChunked = array_chunk($keywordsToUpdate, Constants::UPDATES_MAX_COUNT);
