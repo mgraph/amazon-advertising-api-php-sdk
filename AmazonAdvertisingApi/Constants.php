@@ -78,4 +78,6 @@ class Constants
     public const FILTER_ADGROUP_ID  = 'adGroupIdFilter';
     public const FILTER_STATE       = 'stateFilter';
     public const FILTER_STARTINDEX  = 'startIndex';
+
+    public const UPDATES_MAX_COUNT = 1000;
 }
