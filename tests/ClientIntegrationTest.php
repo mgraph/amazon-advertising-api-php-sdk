@@ -166,7 +166,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
             array(
                 'name'          => 'Test Campaign',
                 'targetingType' => 'auto',
-                "campaignType"  => "sponsoredProducts",
+                'campaignType'  => 'sponsoredProducts',
                 'state'         => 'enabled',
                 'dailyBudget'   => 1,
                 'startDate'     => '20190101',
@@ -177,6 +177,10 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         $this->assertSuccessResponse($response, 207);
     }
 
+    /**
+     * @depends testCreateCampaigns
+     * @return mixed
+     */
     public function testListCampaigns()
     {
         $data = array(
@@ -209,6 +213,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
      * @depends testListCampaigns
      *
      * @param $campaings
+     * @return mixed
      */
     public function testGetCampaign($campaings)
     {
@@ -216,6 +221,8 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 
         $response = self::$client->getCampaign($campaign['campaignId']);
         $this->assertSuccessResponse($response);
+
+        return json_decode($response['response'], true);
     }
 
     /**
@@ -255,19 +262,8 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @depends testCreateAdGroups
      *
-     * @depends testListCampaigns
-     *
-     * @param $campaings
-     */
-    public function testArchiveCampaign($campaings)
-    {
-        $campaing = array_shift($campaings);
-        $response = self::$client->archiveCampaign($campaing['campaignId']);
-        $this->assertSuccessResponse($response);
-    }
-
-    /**
      * @return mixed
      */
     public function testListAdGroups()
@@ -327,11 +323,16 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         $this->assertSuccessResponse($response);
     }
 
-    public function testCreateAdGroups()
+    /**
+     * @depends testGetCampaign
+     */
+    public function testCreateAdGroups($campaigns )
     {
+        $campaign = array_shift($campaigns);
+
         $data = array(
             array(
-                'campaignId' => 1,
+                'campaignId' => $campaign['campaignId'],
                 'name'       => 'Test group',
                 'state'      => 'enabled',
                 'defaultBid' => 1,
@@ -372,6 +373,8 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @depends testCreateBiddableKeywords
+     *
      * @return mixed
      */
     public function testListBiddableKeywords()
@@ -894,9 +897,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         $group = array_shift($groups);
 
         $response = self::$client->getAdGroupBidRecommendations($group['adGroupId']);
-
-        $this->assertFalse($response['success']);
-        $this->assertSame(400, $response['code']);
+        $this->assertSuccessResponse($response);
     }
 
     /**
@@ -934,8 +935,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
     {
         $group = array_shift($groups);
 
-        $response = self::$client->getAdGroupKeywordSuggestions(
-            array("adGroupId" => $group['adGroupId']));
+        $response = self::$client->getAdGroupKeywordSuggestions(array("adGroupId" => $group['adGroupId']));
         $this->assertSuccessResponse($response);
     }
 
@@ -989,6 +989,8 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
      */
     public function testGetSnapshot($snapshot)
     {
+        self::markTestSkipped('Takes too long time to wait for snapshot processing');
+
         $response = self::$client->getSnapshot($snapshot['snapshotId']);
         $this->assertSuccessResponse($response);
     }

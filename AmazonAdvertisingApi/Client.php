@@ -572,6 +572,11 @@ class Client
         return $this->_operation("targets/{$targetId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
+    public function createTargetRecommendations($data = null)
+    {
+        return $this->_operation("targets/productRecommendations", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
     public function getTargetingCategories($data)
     {
         return $this->_operation("targets/categories", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
