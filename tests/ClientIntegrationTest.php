@@ -68,9 +68,9 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
     public function testUpdateProfiles()
     {
         $response = self::$client->updateProfiles(array(array(
-                                                            'profileId'   => self::$client->profileId,
-                                                            'dailyBudget' => 1,
-                                                        )));
+            'profileId'   => self::$client->profileId,
+            'dailyBudget' => 1,
+        )));
 
         $this->assertSuccessResponse($response, 207);
     }
@@ -1012,19 +1012,17 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         $successResponse = array(
             "code"     => $successCode,
             "success"  => true,
-            "response" => ""
+            "response" => "",
+            "requestId" => "",
         );
 
         foreach ($successResponse as $responseItemName => $responseItemValue) {
-            $this->assertArrayHasKey($responseItemName, $successResponse);
+            $this->assertArrayHasKey($responseItemName, $actualResponse);
         }
-
-        $this->assertArrayHasKey('requestId', $actualResponse);
 
         $this->assertSame($successCode, $actualResponse['code']);
         $this->assertEquals(true, $actualResponse['success']);
     }
-
 
     private function assertNotFoundResponse($actualResponse, $code = 404)
     {
@@ -1034,7 +1032,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         );
 
         foreach ($response as $responseItemName => $responseItemValue) {
-            $this->assertArrayHasKey($responseItemName, $response);
+            $this->assertArrayHasKey($responseItemName, $actualResponse);
         }
 
         $this->assertSame($code, $actualResponse['code']);
@@ -1049,7 +1047,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
         );
 
         foreach ($response as $responseItemName => $responseItemValue) {
-            $this->assertArrayHasKey($responseItemName, $response);
+            $this->assertArrayHasKey($responseItemName, $actualResponse);
         }
 
         $this->assertSame($code, $actualResponse['code']);
