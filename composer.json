@@ -1,5 +1,5 @@
 {
-    "name": "creatissimo/amazon-advertising-api-php-sdk",
+    "name": "mgraph/amazon-advertising-api-php-sdk",
     "type": "library",
     "description": "Amazon Advertising API Client Library",
     "keywords": [
@@ -34,7 +34,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/creatissimo/amazon-advertising-api-php-sdk"
+            "url": "https://github.com/mgraph/amazon-advertising-api-php-sdk"
         }
     ]
 }
