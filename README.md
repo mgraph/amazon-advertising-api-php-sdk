@@ -40,13 +40,13 @@ $client->registerProfile(array("countryCode" => "IT"));
 ### Unit tests
 
 ```bash
-phpunit ClientTest.php
+phpunit tests/ClientTest.php
 ```
 
 ### Integration tests
 Copy credentials.xml.dist to credentials.xml and fill in API credentials
 ```bash
-phpunit --configuration credentials.xml ClientIntegrationTest.php
+phpunit --configuration tests/credentials.xml tests/ClientIntegrationTest.php
 ```
 
 

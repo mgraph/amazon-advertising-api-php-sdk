@@ -2,7 +2,7 @@
 
 namespace AmazonAdvertisingApi;
 
-require_once "../AmazonAdvertisingApi/Client.php";
+require_once dirname(dirname(__FILE__)) . '../AmazonAdvertisingApi/Client.php';
 
 class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
 {

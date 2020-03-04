@@ -1,2 +1,4 @@
+vendor/
 tests/credentials.xml
 .idea
+composer.lock
