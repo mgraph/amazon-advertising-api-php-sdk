@@ -5,6 +5,6 @@ class Versions
 {
     public $versionStrings = array(
         "apiVersion"         => "v2",
-        "applicationVersion" => "2.0"
+        "applicationVersion" => "2.1"
     );
 }
