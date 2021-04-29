@@ -93,10 +93,14 @@ class Client
         $response = $this->_executeRequest($request);
 
         $response_array = json_decode($response["response"], true);
-        if (array_key_exists("access_token", $response_array)) {
-            $this->config["accessToken"] = $response_array["access_token"];
-        } else {
-            $this->_logAndThrow("Unable to refresh token. 'access_token' not found in response. " . print_r($response, true));
+        if(!is_null($response_array)){
+            if (array_key_exists("access_token", $response_array)) {
+                $this->config["accessToken"] = $response_array["access_token"];
+            } else {
+                $this->_logAndThrow("Unable to refresh token. 'access_token' not found in response. " . print_r($response, true));
+            }
+        }else{
+            $this->_logAndThrow("doRefreshToken: response_array is null " . print_r($response, true));
         }
 
         return $response;
@@ -597,6 +601,40 @@ class Client
         return $this->_operation("targets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
     }
 
+    public function getNegativeTargetingClause($targetId)
+    {
+        return $this->_operation("negativeTargets/{$targetId}", null, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function getNegativeTargetingClauseEx($targetId)
+    {
+        return $this->_operation("negativeTargets/extended/{$targetId}", null, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function listNegativeTargetingClauses($data = null)
+    {
+        return $this->_operation("negativeTargets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function listNegativeTargetingClausesEx($data = null)
+    {
+        return $this->_operation("negativeTargets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function createNegativeTargetingClauses($data)
+    {
+        return $this->_operation("negativeTargets", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function updateNegativeTargetingClauses($data)
+    {
+        return $this->_operation("negativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function archiveNegativeTargetingClause($targetId)
+    {
+        return $this->_operation("negativeTargets/{$targetId}", null, 'DELETE', CampaignTypes::SPONSORED_PRODUCTS);
+    }
 
     public function getAdGroupBidRecommendations($adGroupId)
     {

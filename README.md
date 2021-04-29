@@ -160,6 +160,24 @@ $client->profileId = "1234567890";
   * [getAsinKeywordSuggestions](#getasinkeywordsuggestions)
   * [bulkGetAsinKeywordSuggestions](#bulkgetasinkeywordsuggestions)
 
+* Product attribute targeting
+  * [getTargetingClause](#getTargetingClause)
+  * [listTargetingClauses](#listTargetingClauses)
+  * [getTargetingClauseEx](#getTargetingClauseEx)
+  * [listTargetingClausesEx](#listTargetingClausesEx)
+  * [createTargetingClauses](#createTargetingClauses)
+  * [updateTargetingClauses](#updateTargetingClauses)
+  * [archiveTargetingClause](#archiveTargetingClause)
+  * [getTargetingCategories](#getTargetingCategories)
+  * [getBrandRecommendations](#getBrandRecommendations)
+  * [getNegativeTargetingClause](#getNegativeTargetingClause)
+  * [getNegativeTargetingClauseEx](#getNegativeTargetingClauseEx)
+  * [createNegativeTargetingClauses](#createNegativeTargetingClauses)
+  * [listNegativeTargetingClauses](#listNegativeTargetingClauses)
+  * [listNegativeTargetingClausesEx](#listNegativeTargetingClausesEx)
+  * [archiveNegativeTargetingClause](#archiveNegativeTargetingClause)
+  * [updateNegativeTargetingClauses](#updateNegativeTargetingClauses)
+  
 #### getProfile
 > Retrieves a single profile by Id.
 
