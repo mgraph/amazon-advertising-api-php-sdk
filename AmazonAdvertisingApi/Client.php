@@ -616,6 +616,12 @@ class Client
         return $this->_operation("negativeTargets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
     }
 
+    public function listCampaignNegativeTargetingClauses($data = null)
+    {
+        // todo: check how to handle this because this not official
+        return $this->_operation("campaignNegativeTargets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+    
     public function listNegativeTargetingClausesEx($data = null)
     {
         return $this->_operation("negativeTargets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
