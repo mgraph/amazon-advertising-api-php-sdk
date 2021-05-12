@@ -177,6 +177,11 @@ $client->profileId = "1234567890";
   * [listNegativeTargetingClausesEx](#listNegativeTargetingClausesEx)
   * [archiveNegativeTargetingClause](#archiveNegativeTargetingClause)
   * [updateNegativeTargetingClauses](#updateNegativeTargetingClauses)
+  * [getCampaignNegativeTargetingClause](#getCampaignNegativeTargetingClause)
+  * [createCampaignNegativeTargetingClauses](#createCampaignNegativeTargetingClauses)
+  * [listCampaignNegativeTargetingClauses](#listCampaignNegativeTargetingClauses)
+  * [archiveCampaignNegativeTargetingClause](#archiveCampaignNegativeTargetingClause)
+  * [updateCampaignNegativeTargetingClause](#updateCampaignNegativeTargetingClause)
   
 #### getProfile
 > Retrieves a single profile by Id.

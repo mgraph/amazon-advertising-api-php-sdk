@@ -622,6 +622,26 @@ class Client
         return $this->_operation("campaignNegativeTargets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
     }
     
+    public function getCampaignNegativeTargetingClause($targetId)
+    {
+        return $this->_operation("campaignNegativeTargets/{$targetId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function createCampaignNegativeTargetingClauses($data)
+    {
+        return $this->_operation("campaignNegativeTargets", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function updateCampaignNegativeTargetingClause($data)
+    {
+        return $this->_operation("campaignNegativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function archiveCampaignNegativeTargetingClause($targetId)
+    {
+        return $this->_operation("campaignNegativeTargets/{$targetId}", null, 'DELETE', CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
     public function listNegativeTargetingClausesEx($data = null)
     {
         return $this->_operation("negativeTargets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
