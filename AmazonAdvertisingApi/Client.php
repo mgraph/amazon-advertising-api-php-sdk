@@ -22,6 +22,7 @@ class Client
         "region"       => null,
         "accessToken"  => null,
         "refreshToken" => null,
+        "version3"     => false,
         "sandbox"      => false];
 
     private $apiVersion         = null;
@@ -728,18 +729,37 @@ class Client
         return $req;
     }
 
-    public function requestReport($recordType, $data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
+    public function requestReportV2($recordType, $data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
         return $this->_operation("{$recordType}/report", $data, "POST", $campaignType);
     }
 
-    public function getReport($reportId)
+    public function getReportV2($reportId)
     {
         $req = $this->_operation("reports/{$reportId}");
         if ($req["success"]) {
             $json = json_decode($req["response"], true);
             if ($json["status"] == "SUCCESS") {
                 return $this->_download($json["location"]);
+            }
+        }
+
+        return $req;
+    }
+
+    public function requestReport($data = null) // v3
+    {
+        return $this->_operation("reporting/reports", $data, "POST");
+    }
+
+    public function getReport($reportId) // v3
+    {
+        $req = $this->_operation("reporting/reports/{$reportId}");
+        if ($req["success"]) {
+            $json = json_decode($req["response"], true);
+
+			if ($json["status"] == "COMPLETED") {
+                return $this->_download($json["url"], true);
             }
         }
 
@@ -784,10 +804,16 @@ class Client
 
     private function _operation($interface, $params = [], $method = "GET", $campaintType = '')
     {
+        $content_type = 'application/json';
+
+        if ($this->config["version3"]) {
+            $content_type = 'application/vnd.createasyncreportrequest.v3+json';
+        }
+
         $headers = [
             "Authorization: bearer {$this->config["accessToken"]}",
             "Amazon-Advertising-API-ClientId: {$this->config['clientId']}",
-            "Content-Type: application/json",
+            "Content-Type: " . $content_type,
             "User-Agent: {$this->userAgent}"
         ];
 
@@ -925,6 +951,11 @@ class Client
                         $this->_logAndThrow("Invalid parameter value for sandbox.");
                     }
                     break;
+                case "version3":
+                    if (!is_bool($v)) {
+                        $this->_logAndThrow("Invalid parameter value for version3.");
+                    }
+                    break;
             }
         }
 
@@ -936,11 +967,17 @@ class Client
         /* check if region exists and set api/token endpoints */
         if (array_key_exists(strtolower($this->config["region"]), $this->endpoints)) {
             $region_code = strtolower($this->config["region"]);
+                           
             if ($this->config["sandbox"]) {
                 $this->endpoint = "https://{$this->endpoints[$region_code]["sandbox"]}/{$this->apiVersion}";
             } else {
                 $this->endpoint = "https://{$this->endpoints[$region_code]["prod"]}/{$this->apiVersion}";
             }
+
+            if ($this->config["version3"]) {
+                $this->endpoint = "https://{$this->endpoints[$region_code]["prod"]}";
+            }
+
             $this->tokenUrl = $this->endpoints[$region_code]["tokenUrl"];
         } else {
             $this->_logAndThrow("Invalid region.");
