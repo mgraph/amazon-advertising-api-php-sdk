@@ -22,8 +22,8 @@ class Client
         "region"       => null,
         "accessToken"  => null,
         "refreshToken" => null,
-        "version3"     => false,
-        "sandbox"      => false];
+        'apiVersion'   => '',
+    ];
 
     private $apiVersion         = null;
     private $applicationVersion = null;
@@ -34,6 +34,8 @@ class Client
     private $endpoints          = null;
     private $versionStrings     = null;
     private $retryCounter       = 0;
+    private $fullUrl = '';
+    private $contentType = '';
 
     public $profileId = null;
 
@@ -42,11 +44,13 @@ class Client
         $regions         = new Regions();
         $this->endpoints = $regions->endpoints;
 
-
         $versions             = new Versions();
         $this->versionStrings = $versions->versionStrings;
 
-        $this->apiVersion         = $this->versionStrings["apiVersion"];
+        $this->apiVersion = $config['apiVersion'] ?? null;
+
+        $this->apiVersion = is_null($this->apiVersion) ? $this->versionStrings["apiVersion"] : $this->apiVersion;
+
         $this->applicationVersion = $this->versionStrings["applicationVersion"];
         $this->userAgent          = "AdvertisingAPI PHP Client Library v{$this->applicationVersion}";
 
@@ -107,24 +111,20 @@ class Client
         return $response;
     }
 
+    public function listTestAccounts()
+    {
+        return $this->_operation("testAccounts");
+    }
+
+    public function listManagerAccounts()
+    {
+        return $this->_operation("managerAccounts");
+    }
+
+    // profiles
     public function listProfiles()
     {
         return $this->_operation("profiles");
-    }
-
-    public function registerProfile($data)
-    {
-        return $this->_operation("profiles/register", $data, "PUT");
-    }
-
-    public function registerProfileBrand($data)
-    {
-        return $this->_operation("profiles/registerBrand", $data, "PUT");
-    }
-
-    public function registerProfileStatus($profileId)
-    {
-        return $this->_operation("profiles/register/{$profileId}/status");
     }
 
     public function getProfile($profileId)
@@ -137,14 +137,10 @@ class Client
         return $this->_operation("profiles", $data, "PUT");
     }
 
+    // portfolios
     public function getPortfolio($portfolioId)
     {
         return $this->_operation("portfolios/{$portfolioId}");
-    }
-
-    public function getPortfolioEx($portfolioId)
-    {
-        return $this->_operation("portfolios/extended/{$portfolioId}");
     }
 
     public function createPortfolios($data)
@@ -162,21 +158,7 @@ class Client
         return $this->_operation("portfolios", $data);
     }
 
-    public function listPortfoliosEx($data = null)
-    {
-        return $this->_operation("portfolios/extended", $data);
-    }
-
-    public function getCampaign($campaignId, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
-    {
-        return $this->_operation("campaigns/{$campaignId}", [], 'GET', $campainType);
-    }
-
-    public function getCampaignEx($campaignId, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
-    {
-        return $this->_operation("campaigns/extended/{$campaignId}", [], 'GET', $campainType);
-    }
-
+    // campaigns
     public function createCampaigns($data)
     {
         return $this->_operation("campaigns", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
@@ -187,199 +169,12 @@ class Client
         return $this->_operation("campaigns", $data, "PUT", $campainType);
     }
 
-    public function archiveCampaign($campaignId, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
-    {
-        $this->archiveNegativeCampaignKeywords($campaignId, $campainType);
-        $this->archiveCampaignAdGroups($campaignId);
-
-        return $this->_operation("campaigns/{$campaignId}", null, "DELETE", $campainType);
-    }
-
-    public function archiveNegativeKeywordsByAdGroup($adGroupId)
-    {
-        return $this->archiveBulk(
-            'NegativeKeywords',
-            [Constants::FILTER_ADGROUP_ID => $adGroupId],
-            'negative keyword',
-            __METHOD__,
-            Constants::KEYWORD_ID
-        );
-    }
-
-    public function archiveNegativeCampaignKeywords($campaignId, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
-    {
-        if ($campainType === CampaignTypes::SPONSORED_BRANDS) {
-            return;
-        }
-
-        return $this->archiveBulk(
-            'CampaignNegativeKeywords',
-            [Constants::FILTER_CAMPAIGN_ID => $campaignId],
-            'negative keyword',
-            __METHOD__,
-            Constants::KEYWORD_ID,
-            Constants::STATE_DELETED
-        );
-    }
-
-    public function archiveAdsByAdGroup($adGroupId)
-    {
-        return $this->archiveBulk(
-            'ProductAds',
-            [Constants::FILTER_ADGROUP_ID => $adGroupId],
-            'adGroup',
-            __METHOD__,
-            Constants::AD_ID
-        );
-    }
-
-    public function archiveBiddableKeywordsByAdGroup($adGroupId)
-    {
-        return $this->archiveBulk(
-            'BiddableKeywords',
-            [Constants::FILTER_ADGROUP_ID => $adGroupId],
-            'biddable keyword',
-            __METHOD__,
-            Constants::KEYWORD_ID
-        );
-    }
-
-    public function archiveTargetingClausesByAdGroup($adGroupId)
-    {
-        return $this->archiveBulk(
-            'TargetingClauses',
-            [Constants::FILTER_ADGROUP_ID => $adGroupId],
-            'targeting clause',
-            __METHOD__,
-            Constants::TARGET_ID,
-            Constants::STATE_ARCHIVED
-        );
-    }
-
-
-    private function archiveCampaignAdGroups($campaignId)
-    {
-        $startIndex = 0;
-
-        while (true) {
-            $adGroupListResponse = $this->listAdGroups([
-                Constants::FILTER_CAMPAIGN_ID => $campaignId,
-                Constants::FILTER_STARTINDEX  => $startIndex,
-                Constants::FILTER_STATE       => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])
-            ]);
-
-            if ($adGroupListResponse['code'] !== 200) {
-                throw new \Exception('Unable to load adGroups list for archiveCampaignAdGroups');
-            }
-
-            $adGroups = json_decode($adGroupListResponse['response'], true);
-
-            if (\count($adGroups) === 0) {
-                break;
-            }
-
-            foreach ($adGroups as $adGroup) {
-                $this->archiveAdGroup($adGroup[Constants::AD_ADGROUP_ID]);
-            }
-
-            $startIndex++;
-        }
-    }
-
-
-    private function archiveBulk(
-        string $type,
-        array $getListData,
-        string $name,
-        string $method,
-        string $itemIdKey,
-        string $state = Constants::STATE_ARCHIVED
-    )
-    {
-        $startIndex     = 0;
-        $processedCount = 0;
-
-        while (true) {
-            $keywordListResponse = $this->{"list$type"}($getListData + [
-                    Constants::FILTER_STARTINDEX => $startIndex,
-                    Constants::FILTER_STATE      => implode(',', [Constants::STATE_ENABLED, Constants::STATE_PAUSED])
-                ]);
-
-            if (200 !== $keywordListResponse['code']) {
-                throw new \Exception(sprintf('Unable to load %s list for %s', $name, $method));
-            }
-
-            $keywords = json_decode($keywordListResponse['response'], true);
-
-            if ($keywords === []) {
-                break;
-            }
-
-            $keywordsToUpdate = [];
-
-            foreach ($keywords as $keyword) {
-                if (!isset($keyword[$itemIdKey]) ||
-                    ($type === 'TargetingClauses' && $keyword[Constants::TARGET_EXPRESSION_TYPE] === Constants::TARGET_EXPRESSION_TYPE_AUTO)) {
-                    continue;
-                }
-
-                $keywordsToUpdate[] = [$itemIdKey => $keyword[$itemIdKey], Constants::AD_STATE => $state];
-                $processedCount++;
-            }
-
-            $keywordsToUpdateChunked = array_chunk($keywordsToUpdate, Constants::UPDATES_MAX_COUNT);
-
-            foreach ($keywordsToUpdateChunked as $keywordsChunk) {
-                $response = $this->{"update$type"}($keywordsChunk);
-
-                if (207 !== $response['code']) {
-                    $message = 'Unable to archive %ss clause in  %s. Request id: %s';
-                    throw new \Exception(sprintf($message, $name, $method, $response['requestId']));
-                }
-
-                $keywordsResponse = json_decode($response['response'], true);
-
-                foreach ($keywordsResponse as $response) {
-                    if (!isset($response[$itemIdKey])) {
-                        $message = 'Unable to archive %s clause in %s. Code: %s. Error: %s';
-                        throw new \Exception(sprintf($message, $name, $method, $response['code'], $response['description']));
-                    }
-                }
-            }
-
-            $startIndex++;
-        }
-
-        return $processedCount;
-    }
-
-
-    private function archiveKeywordsByAdGroup($adGroupId)
-    {
-        $this->archiveBiddableKeywordsByAdGroup($adGroupId);
-        $this->archiveNegativeKeywordsByAdGroup($adGroupId);
-    }
-
     public function listCampaigns($data = null, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaigns", $data, 'GET', $campainType);
+        return $this->_operation("campaigns/list", $data, "POST", $campainType);
     }
 
-    public function listCampaignsEx($data = null, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
-    {
-        return $this->_operation("campaigns/extended", $data, 'GET', $campainType);
-    }
-
-    public function getAdGroup($adGroupId)
-    {
-        return $this->_operation("adGroups/{$adGroupId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getAdGroupEx($adGroupId)
-    {
-        return $this->_operation("adGroups/extended/{$adGroupId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
+    // adGroups
     public function createAdGroups($data)
     {
         return $this->_operation("adGroups", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
@@ -390,38 +185,17 @@ class Client
         return $this->_operation("adGroups", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function archiveAdGroupDependencies($adGroupId)
-    {
-        $this->archiveKeywordsByAdGroup($adGroupId);
-        $this->archiveAdsByAdGroup($adGroupId);
-        $this->archiveTargetingClausesByAdGroup($adGroupId);
-    }
-
-    public function archiveAdGroup($adGroupId)
-    {
-        return $this->_operation("adGroups/{$adGroupId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
     public function listAdGroups($data = null)
     {
-        return $this->_operation("adGroups", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("adGroups/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function listAdGroupsEx($data = null)
+    public function getAdGroupBidRecommendations($adGroupId)
     {
-        return $this->_operation("adGroups/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("adGroups/{$adGroupId}/bidRecommendations");
     }
 
-    public function getBiddableKeyword($keywordId, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
-    {
-        return $this->_operation("keywords/{$keywordId}", [], 'GET', $campaignType);
-    }
-
-    public function getBiddableKeywordEx($keywordId)
-    {
-        return $this->_operation("keywords/extended/{$keywordId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
+    // keywords
     public function createBiddableKeywords($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
         return $this->_operation("keywords", $data, "POST", $campaignType);
@@ -432,31 +206,17 @@ class Client
         return $this->_operation("keywords", $data, "PUT", $campaignType);
     }
 
-    public function archiveBiddableKeyword($keywordId, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
+    public function getKeywordBidRecommendations($keywordId)
     {
-        return $this->_operation("keywords/{$keywordId}", null, "DELETE", $campaignType);
+        return $this->_operation("keywords/{$keywordId}/bidRecommendations");
     }
 
     public function listBiddableKeywords($data = null)
     {
-        return $this->_operation("keywords", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("keywords/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function listBiddableKeywordsEx($data = null)
-    {
-        return $this->_operation("keywords/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getNegativeKeyword($keywordId)
-    {
-        return $this->_operation("negativeKeywords/{$keywordId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getNegativeKeywordEx($keywordId)
-    {
-        return $this->_operation("negativeKeywords/extended/{$keywordId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
+    // negativeKeywords
     public function createNegativeKeywords($data)
     {
         return $this->_operation("negativeKeywords", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
@@ -467,31 +227,12 @@ class Client
         return $this->_operation("negativeKeywords", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function archiveNegativeKeyword($keywordId)
-    {
-        return $this->_operation("negativeKeywords/{$keywordId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
     public function listNegativeKeywords($data = null)
     {
-        return $this->_operation("negativeKeywords", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeKeywords/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function listNegativeKeywordsEx($data = null)
-    {
-        return $this->_operation("negativeKeywords/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getCampaignNegativeKeyword($keywordId)
-    {
-        return $this->_operation("campaignNegativeKeywords/{$keywordId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getCampaignNegativeKeywordEx($keywordId)
-    {
-        return $this->_operation("campaignNegativeKeywords/extended/{$keywordId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
+    // campaignNegativeKeywords
     public function createCampaignNegativeKeywords($data)
     {
         return $this->_operation("campaignNegativeKeywords", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
@@ -509,24 +250,10 @@ class Client
 
     public function listCampaignNegativeKeywords($data = null)
     {
-        return $this->_operation("campaignNegativeKeywords", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeKeywords/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function listCampaignNegativeKeywordsEx($data = null)
-    {
-        return $this->_operation("campaignNegativeKeywords/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getProductAd($productAdId)
-    {
-        return $this->_operation("productAds/{$productAdId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getProductAdEx($productAdId)
-    {
-        return $this->_operation("productAds/extended/{$productAdId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
+    // productAds
     public function createProductAds($data)
     {
         return $this->_operation("productAds", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
@@ -537,31 +264,12 @@ class Client
         return $this->_operation("productAds", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function archiveProductAd($productAdId)
-    {
-        return $this->_operation("productAds/{$productAdId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
     public function listProductAds($data = null)
     {
-        return $this->_operation("productAds", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("productAds/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function listProductAdsEx($data = null)
-    {
-        return $this->_operation("productAds/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getTargetingClause($targetId)
-    {
-        return $this->_operation("targets/{$targetId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getTargetingClauseEx($targetId)
-    {
-        return $this->_operation("targets/extended/{$targetId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
+    // targets
     public function createTargetingClauses($data)
     {
         return $this->_operation("targets", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
@@ -572,85 +280,15 @@ class Client
         return $this->_operation("targets", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function archiveTargetingClause($targetId)
-    {
-        return $this->_operation("targets/{$targetId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function createTargetRecommendations($data = null)
-    {
-        return $this->_operation("targets/productRecommendations", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getTargetingCategories($data)
-    {
-        return $this->_operation("targets/categories", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getBrandRecommendations($data)
-    {
-        return $this->_operation("targets/brands", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
     public function listTargetingClauses($data = null)
     {
-        return $this->_operation("targets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("targets/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function listTargetingClausesEx($data = null)
-    {
-        return $this->_operation("targets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getNegativeTargetingClause($targetId)
-    {
-        return $this->_operation("negativeTargets/{$targetId}", null, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function getNegativeTargetingClauseEx($targetId)
-    {
-        return $this->_operation("negativeTargets/extended/{$targetId}", null, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function listNegativeTargetingClauses($data = null)
-    {
-        return $this->_operation("negativeTargets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function listCampaignNegativeTargetingClauses($data = null)
-    {
-        // todo: check how to handle this because this not official
-        return $this->_operation("campaignNegativeTargets", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-    
-    public function getCampaignNegativeTargetingClause($targetId)
-    {
-        return $this->_operation("campaignNegativeTargets/{$targetId}", [], 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function createCampaignNegativeTargetingClauses($data)
-    {
-        return $this->_operation("campaignNegativeTargets", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function updateCampaignNegativeTargetingClause($data)
-    {
-        return $this->_operation("campaignNegativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function archiveCampaignNegativeTargetingClause($targetId)
-    {
-        return $this->_operation("campaignNegativeTargets/{$targetId}", null, 'DELETE', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
-    public function listNegativeTargetingClausesEx($data = null)
-    {
-        return $this->_operation("negativeTargets/extended", $data, 'GET', CampaignTypes::SPONSORED_PRODUCTS);
-    }
-
+    // negativeTargets
     public function createNegativeTargetingClauses($data)
     {
-        return $this->_operation("negativeTargets", $data, 'POST', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeTargets", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
     public function updateNegativeTargetingClauses($data)
@@ -658,59 +296,29 @@ class Client
         return $this->_operation("negativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function archiveNegativeTargetingClause($targetId)
+    public function listNegativeTargetingClauses($data = null)
     {
-        return $this->_operation("negativeTargets/{$targetId}", null, 'DELETE', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeTargets/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function getAdGroupBidRecommendations($adGroupId)
+    // campaignNegativeTargets
+
+    public function createCampaignNegativeTargetingClauses($data)
     {
-        return $this->_operation("adGroups/{$adGroupId}/bidRecommendations");
+        return $this->_operation("campaignNegativeTargets", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function getKeywordBidRecommendations($keywordId)
+    public function updateCampaignNegativeTargetingClause($data)
     {
-        return $this->_operation("keywords/{$keywordId}/bidRecommendations");
+        return $this->_operation("campaignNegativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function bulkGetKeywordBidRecommendations($adGroupId, $data)
+    public function listCampaignNegativeTargetingClauses($data = null)
     {
-        $data = [
-            "adGroupId" => $adGroupId,
-            "keywords"  => $data];
-
-        return $this->_operation("keywords/bidRecommendations", $data, "POST");
+        return $this->_operation("campaignNegativeTargets/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
     }
 
-    public function getAdGroupKeywordSuggestions($data)
-    {
-        $adGroupId = $data["adGroupId"];
-        unset($data["adGroupId"]);
-
-        return $this->_operation("adGroups/{$adGroupId}/suggested/keywords", $data);
-    }
-
-    public function getAdGroupKeywordSuggestionsEx($data)
-    {
-        $adGroupId = $data["adGroupId"];
-        unset($data["adGroupId"]);
-
-        return $this->_operation("adGroups/{$adGroupId}/suggested/keywords/extended", $data);
-    }
-
-    public function getAsinKeywordSuggestions($data)
-    {
-        $asin = $data["asin"];
-        unset($data["asin"]);
-
-        return $this->_operation("asins/{$asin}/suggested/keywords", $data);
-    }
-
-    public function bulkGetAsinKeywordSuggestions($data)
-    {
-        return $this->_operation("asins/suggested/keywords", $data, "POST");
-    }
-
+    // snapshot
     public function requestSnapshot($recordType, $data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
         return $this->_operation("{$recordType}/snapshot", $data, "POST", $campaignType);
@@ -729,24 +337,7 @@ class Client
         return $req;
     }
 
-    public function requestReportV2($recordType, $data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
-    {
-        return $this->_operation("{$recordType}/report", $data, "POST", $campaignType);
-    }
-
-    public function getReportV2($reportId)
-    {
-        $req = $this->_operation("reports/{$reportId}");
-        if ($req["success"]) {
-            $json = json_decode($req["response"], true);
-            if ($json["status"] == "SUCCESS") {
-                return $this->_download($json["location"]);
-            }
-        }
-
-        return $req;
-    }
-
+    // reports
     public function requestReport($data = null) // v3
     {
         return $this->_operation("reporting/reports", $data, "POST");
@@ -804,15 +395,12 @@ class Client
 
     private function _operation($interface, $params = [], $method = "GET", $campaintType = '')
     {
-        $content_type = 'application/json';
-
-        if ($this->config["version3"]) {
-            $content_type = 'application/vnd.createasyncreportrequest.v3+json';
-        }
+        $content_type = $this->getContentType($interface, $campaintType);
 
         $headers = [
             "Authorization: bearer {$this->config["accessToken"]}",
             "Amazon-Advertising-API-ClientId: {$this->config['clientId']}",
+            "Accept: " . $content_type,
             "Content-Type: " . $content_type,
             "User-Agent: {$this->userAgent}"
         ];
@@ -849,6 +437,9 @@ class Client
             default:
                 $this->_logAndThrow("Unknown verb {$method}.");
         }
+
+        $this->fullUrl = $url;
+        $this->contentType = $content_type;
 
         $request->setOption(CURLOPT_URL, $url);
         $request->setOption(CURLOPT_HTTPHEADER, $headers);
@@ -889,11 +480,15 @@ class Client
             return ["success"   => false,
                     "code"      => $response_info["http_code"],
                     "response"  => $response,
+                    "fullUrl"   => $this->fullUrl,
+                    "contentType"   => $this->contentType,
                     "requestId" => $requestId];
         } else {
             return ["success"   => true,
                     "code"      => $response_info["http_code"],
                     "response"  => $response,
+                    "fullUrl"   => $this->fullUrl,
+                    "contentType"   => $this->contentType,
                     "requestId" => $this->requestId];
         }
     }
@@ -918,7 +513,7 @@ class Client
     private function _validateConfigParameters()
     {
         foreach ($this->config as $k => $v) {
-            if (is_null($v) && $k !== "accessToken" && $k !== "refreshToken") {
+            if (is_null($v) && $k !== "accessToken" && $k !== "refreshToken" && $k !== "apiVersion") {
                 $this->_logAndThrow("Missing required parameter '{$k}'.");
             }
             switch ($k) {
@@ -946,16 +541,6 @@ class Client
                         }
                     }
                     break;
-                case "sandbox":
-                    if (!is_bool($v)) {
-                        $this->_logAndThrow("Invalid parameter value for sandbox.");
-                    }
-                    break;
-                case "version3":
-                    if (!is_bool($v)) {
-                        $this->_logAndThrow("Invalid parameter value for version3.");
-                    }
-                    break;
             }
         }
 
@@ -967,15 +552,11 @@ class Client
         /* check if region exists and set api/token endpoints */
         if (array_key_exists(strtolower($this->config["region"]), $this->endpoints)) {
             $region_code = strtolower($this->config["region"]);
-                           
-            if ($this->config["sandbox"]) {
-                $this->endpoint = "https://{$this->endpoints[$region_code]["sandbox"]}/{$this->apiVersion}";
+
+            if (empty($this->apiVersion)) {
+                $this->endpoint = "https://{$this->endpoints[$region_code]["prod"]}";
             } else {
                 $this->endpoint = "https://{$this->endpoints[$region_code]["prod"]}/{$this->apiVersion}";
-            }
-
-            if ($this->config["version3"]) {
-                $this->endpoint = "https://{$this->endpoints[$region_code]["prod"]}";
             }
 
             $this->tokenUrl = $this->endpoints[$region_code]["tokenUrl"];
@@ -990,5 +571,95 @@ class Client
     {
         error_log($message, 0);
         throw new \Exception($message);
+    }
+
+    private function getContentType($interface, $campaintType){
+        $content_type = 'application/json';
+
+        if (stripos($interface, 'snapshot')) {
+            return $content_type;
+        }
+
+        if (stripos($interface, 'reporting/reports') !== false) { // v3
+            $content_type = 'application/vnd.createasyncreportrequest.v3+json';
+        }
+
+        if ($interface == 'brands') { // v3
+            $content_type = 'application/vnd.brand.v3+json';
+        }
+
+        if (stripos($interface, 'campaigns') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spcampaign.v3+json';
+            }
+        }
+
+        if (stripos($interface, 'adgroups') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spAdGroup.v3+json';
+            }
+        }
+        
+        if (stripos($interface, 'keywords') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spKeyword.v3+json';
+            }
+        }
+
+        if (stripos($interface, 'CampaignNegativeKeyword') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spCampaignNegativeKeyword.v3+json';
+            }
+        }
+
+        if (stripos($interface, 'negativeKeywords') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spNegativeKeyword.v3+json';
+            }
+        }
+
+        if (stripos($interface, 'negativeTargets') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spNegativeTargetingClause.v3+json';
+            }
+        }
+
+        if (stripos($interface, 'campaignNegativeTargets') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spCampaignNegativeTargetingClause.v3+json';
+            }
+        }
+
+        if (stripos($interface, 'ProductAds') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spProductAd.v3+json';
+            }
+        }
+
+        if (stripos($interface, 'targets') === 0) {
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
+                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            }else{
+                $content_type = 'application/vnd.spTargetingClause.v3+json';
+            }
+        }
+
+        return $content_type;
     }
 }
