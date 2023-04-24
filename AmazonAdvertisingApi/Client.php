@@ -121,6 +121,11 @@ class Client
         return $this->_operation("managerAccounts");
     }
 
+    public function productMetadata($data)
+    {
+        return $this->_operation("product/metadata", $data, "POST");
+    }
+
     // profiles
     public function listProfiles()
     {
@@ -576,8 +581,12 @@ class Client
     private function getContentType($interface, $campaintType){
         $content_type = 'application/json';
 
-        if (stripos($interface, 'snapshot')) {
+        if (stripos($interface, 'snapshot') !== false) {
             return $content_type;
+        }
+        
+        if (stripos($interface, 'product/metadata') !== false) {
+            return 'application/vnd.productmetadatarequest.v1+json';
         }
 
         if (stripos($interface, 'reporting/reports') !== false) { // v3
