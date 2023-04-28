@@ -164,9 +164,9 @@ class Client
     }
 
     // campaigns
-    public function createCampaigns($data)
+    public function createCampaigns($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaigns", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaigns", $data, "POST", $campaignType);
     }
 
     public function updateCampaigns($data, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
@@ -180,19 +180,19 @@ class Client
     }
 
     // adGroups
-    public function createAdGroups($data)
+    public function createAdGroups($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("adGroups", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("adGroups", $data, "POST", $campaignType);
     }
 
-    public function updateAdGroups($data)
+    public function updateAdGroups($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("adGroups", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("adGroups", $data, "PUT", $campaignType);
     }
 
-    public function listAdGroups($data = null)
+    public function listAdGroups($data = null, $campainType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("adGroups/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("adGroups/list", $data, "POST", $campainType);
     }
 
     public function getAdGroupBidRecommendations($adGroupId)
@@ -216,111 +216,111 @@ class Client
         return $this->_operation("keywords/{$keywordId}/bidRecommendations");
     }
 
-    public function listBiddableKeywords($data = null)
+    public function listBiddableKeywords($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("keywords/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("keywords/list", $data, "POST", $campaignType);
     }
 
     // negativeKeywords
-    public function createNegativeKeywords($data)
+    public function createNegativeKeywords($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("negativeKeywords", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeKeywords", $data, "POST", $campaignType);
     }
 
-    public function updateNegativeKeywords($data)
+    public function updateNegativeKeywords($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("negativeKeywords", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeKeywords", $data, "PUT", $campaignType);
     }
 
-    public function listNegativeKeywords($data = null)
+    public function listNegativeKeywords($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("negativeKeywords/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeKeywords/list", $data, "POST", $campaignType);
     }
 
     // campaignNegativeKeywords
-    public function createCampaignNegativeKeywords($data)
+    public function createCampaignNegativeKeywords($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaignNegativeKeywords", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeKeywords", $data, "POST", $campaignType);
     }
 
-    public function updateCampaignNegativeKeywords($data)
+    public function updateCampaignNegativeKeywords($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaignNegativeKeywords", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeKeywords", $data, "PUT", $campaignType);
     }
 
-    public function removeCampaignNegativeKeyword($keywordId)
+    public function removeCampaignNegativeKeyword($keywordId, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaignNegativeKeywords/{$keywordId}", null, "DELETE", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeKeywords/{$keywordId}", null, "DELETE", $campaignType);
     }
 
-    public function listCampaignNegativeKeywords($data = null)
+    public function listCampaignNegativeKeywords($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaignNegativeKeywords/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeKeywords/list", $data, "POST", $campaignType);
     }
 
     // productAds
-    public function createProductAds($data)
+    public function createProductAds($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("productAds", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("productAds", $data, "POST", $campaignType);
     }
 
-    public function updateProductAds($data)
+    public function updateProductAds($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("productAds", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("productAds", $data, "PUT", $campaignType);
     }
 
-    public function listProductAds($data = null)
+    public function listProductAds($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("productAds/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("productAds/list", $data, "POST", $campaignType);
     }
 
     // targets
-    public function createTargetingClauses($data)
+    public function createTargetingClauses($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("targets", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("targets", $data, "POST", $campaignType);
     }
 
-    public function updateTargetingClauses($data)
+    public function updateTargetingClauses($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("targets", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("targets", $data, "PUT", $campaignType);
     }
 
-    public function listTargetingClauses($data = null)
+    public function listTargetingClauses($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("targets/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("targets/list", $data, "POST", $campaignType);
     }
 
     // negativeTargets
-    public function createNegativeTargetingClauses($data)
+    public function createNegativeTargetingClauses($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("negativeTargets", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeTargets", $data, "POST", $campaignType);
     }
 
-    public function updateNegativeTargetingClauses($data)
+    public function updateNegativeTargetingClauses($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("negativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeTargets", $data, 'PUT', $campaignType);
     }
 
-    public function listNegativeTargetingClauses($data = null)
+    public function listNegativeTargetingClauses($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("negativeTargets/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("negativeTargets/list", $data, "POST", $campaignType);
     }
 
     // campaignNegativeTargets
 
-    public function createCampaignNegativeTargetingClauses($data)
+    public function createCampaignNegativeTargetingClauses($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaignNegativeTargets", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeTargets", $data, "POST", $campaignType);
     }
 
-    public function updateCampaignNegativeTargetingClause($data)
+    public function updateCampaignNegativeTargetingClause($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaignNegativeTargets", $data, 'PUT', CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeTargets", $data, 'PUT', $campaignType);
     }
 
-    public function listCampaignNegativeTargetingClauses($data = null)
+    public function listCampaignNegativeTargetingClauses($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
-        return $this->_operation("campaignNegativeTargets/list", $data, "POST", CampaignTypes::SPONSORED_PRODUCTS);
+        return $this->_operation("campaignNegativeTargets/list", $data, "POST", $campaignType);
     }
 
     // snapshot
