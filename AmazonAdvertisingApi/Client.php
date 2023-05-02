@@ -36,6 +36,7 @@ class Client
     private $retryCounter       = 0;
     private $fullUrl = '';
     private $contentType = '';
+    private $acceptHeader = '';
 
     public $profileId = null;
 
@@ -119,6 +120,11 @@ class Client
     public function listManagerAccounts()
     {
         return $this->_operation("managerAccounts");
+    }
+    
+    public function getBrands()
+    {
+        return $this->_operation("brands");
     }
 
     public function productMetadata($data)
@@ -218,6 +224,10 @@ class Client
 
     public function listBiddableKeywords($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
+        if($campaignType == CampaignTypes::SPONSORED_BRANDS){
+           return $this->_operation("keywords", $data, "GET", $campaignType);
+        }
+
         return $this->_operation("keywords/list", $data, "POST", $campaignType);
     }
 
@@ -234,6 +244,10 @@ class Client
 
     public function listNegativeKeywords($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
+        if($campaignType == CampaignTypes::SPONSORED_BRANDS){
+            return $this->_operation("negativeKeywords", $data, "GET", $campaignType);
+        }
+
         return $this->_operation("negativeKeywords/list", $data, "POST", $campaignType);
     }
 
@@ -272,6 +286,12 @@ class Client
     public function listProductAds($data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
         return $this->_operation("productAds/list", $data, "POST", $campaignType);
+    }
+
+    // Brand Ads
+    public function listBrandAds($data = null, $campaignType = CampaignTypes::SPONSORED_BRANDS)
+    {
+        return $this->_operation("ads/list", $data, "POST", $campaignType);
     }
 
     // targets
@@ -343,20 +363,32 @@ class Client
     }
 
     // reports
-    public function requestReport($data = null) // v3
+    public function requestReport($data = null, $recordType = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS) // v2 & v3
     {
+        if($this->apiVersion == 'v2'){
+            return $this->_operation("{$recordType}/report", $data, "POST", $campaignType);
+        }
+
         return $this->_operation("reporting/reports", $data, "POST");
     }
 
-    public function getReport($reportId) // v3
+    public function getReport($reportId) // v2 & v3
     {
-        $req = $this->_operation("reporting/reports/{$reportId}");
+        if($this->apiVersion == 'v2'){
+            $req = $this->_operation("reports/{$reportId}");
+        } else {
+            $req = $this->_operation("reporting/reports/{$reportId}");
+        }
         if ($req["success"]) {
             $json = json_decode($req["response"], true);
 
-			if ($json["status"] == "COMPLETED") {
-                return $this->_download($json["url"], true);
+            if ($json["status"] == "SUCCESS" && isset($json["location"])) { // v2
+                return $this->_download($json["location"]);
             }
+
+			if ($json["status"] == "COMPLETED" && isset($json["url"])) { // v3
+                return $this->_download($json["url"], true);
+            }			
         }
 
         return $req;
@@ -401,14 +433,25 @@ class Client
     private function _operation($interface, $params = [], $method = "GET", $campaintType = '')
     {
         $content_type = $this->getContentType($interface, $campaintType);
+        $accept_header = $content_type;
+
+        // SB Issue: code:415, details: Cannot consume content type
+        if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+            if (in_array($interface, ['keywords', 'negativeKeywords', 'targets/list', 'negativeTargets/list'])) {
+                $content_type = 'application/json';
+            }
+        }
 
         $headers = [
             "Authorization: bearer {$this->config["accessToken"]}",
             "Amazon-Advertising-API-ClientId: {$this->config['clientId']}",
-            "Accept: " . $content_type,
+            "Accept: " . $accept_header,
             "Content-Type: " . $content_type,
             "User-Agent: {$this->userAgent}"
         ];
+
+        $this->contentType = $content_type;
+        $this->acceptHeader = $accept_header;
 
         if (!is_null($this->profileId)) {
             array_push($headers, "Amazon-Advertising-API-Scope: {$this->profileId}");
@@ -419,6 +462,8 @@ class Client
         $url             = "{$this->endpoint}/{$campaintType}{$interface}";
         $this->requestId = null;
         $data            = "";
+
+        $url = str_replace('/v4/sb/', '/sb/v4/', $url); // Sponsored Brand inconsistent URL
 
         switch (strtolower($method)) {
             case "get":
@@ -444,7 +489,7 @@ class Client
         }
 
         $this->fullUrl = $url;
-        $this->contentType = $content_type;
+        
 
         $request->setOption(CURLOPT_URL, $url);
         $request->setOption(CURLOPT_HTTPHEADER, $headers);
@@ -486,14 +531,18 @@ class Client
                     "code"      => $response_info["http_code"],
                     "response"  => $response,
                     "fullUrl"   => $this->fullUrl,
+                    "response_content"   => $response_info["content_type"] ?? '',
                     "contentType"   => $this->contentType,
+                    "acceptHeader"   => $this->acceptHeader,
                     "requestId" => $requestId];
         } else {
             return ["success"   => true,
                     "code"      => $response_info["http_code"],
                     "response"  => $response,
                     "fullUrl"   => $this->fullUrl,
+                    "response_content"   => $response_info["content_type"] ?? '',
                     "contentType"   => $this->contentType,
+                    "acceptHeader"   => $this->acceptHeader,
                     "requestId" => $this->requestId];
         }
     }
@@ -584,6 +633,10 @@ class Client
         if (stripos($interface, 'snapshot') !== false) {
             return $content_type;
         }
+
+        if ($this->apiVersion == 'v2' && stripos($interface, 'report') !== false) {
+            return $content_type;
+        }
         
         if (stripos($interface, 'product/metadata') !== false) {
             return 'application/vnd.productmetadatarequest.v1+json';
@@ -598,72 +651,72 @@ class Client
         }
 
         if (stripos($interface, 'campaigns') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                $content_type = 'application/vnd.sbcampaignresource.v4+json';
             }else{
                 $content_type = 'application/vnd.spcampaign.v3+json';
             }
         }
 
         if (stripos($interface, 'adgroups') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                $content_type = 'application/vnd.sbadgroupresource.v4+json';
             }else{
                 $content_type = 'application/vnd.spAdGroup.v3+json';
             }
         }
         
         if (stripos($interface, 'keywords') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                $content_type = 'application/vnd.sbkeyword.v3.2+json';
             }else{
                 $content_type = 'application/vnd.spKeyword.v3+json';
             }
         }
 
         if (stripos($interface, 'CampaignNegativeKeyword') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                
             }else{
                 $content_type = 'application/vnd.spCampaignNegativeKeyword.v3+json';
             }
         }
 
         if (stripos($interface, 'negativeKeywords') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                $content_type = 'application/vnd.sbnegativekeyword.v3.2+json';
             }else{
                 $content_type = 'application/vnd.spNegativeKeyword.v3+json';
             }
         }
 
         if (stripos($interface, 'negativeTargets') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                $content_type = 'application/vnd.sblistnegativetargetsresponse.v3.2+json';
             }else{
                 $content_type = 'application/vnd.spNegativeTargetingClause.v3+json';
             }
         }
 
         if (stripos($interface, 'campaignNegativeTargets') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                
             }else{
                 $content_type = 'application/vnd.spCampaignNegativeTargetingClause.v3+json';
             }
         }
 
         if (stripos($interface, 'ProductAds') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
-            }else{
-                $content_type = 'application/vnd.spProductAd.v3+json';
-            }
+            $content_type = 'application/vnd.spProductAd.v3+json';
+        }
+        
+        if (stripos($interface, 'ads') === 0) {
+            $content_type = 'application/vnd.sbadresource.v4+json';
         }
 
         if (stripos($interface, 'targets') === 0) {
-            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) { // v4
-                // $content_type = 'application/vnd.sbcampaignresource.v4+json';
+            if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
+                $content_type = 'application/vnd.sblisttargetsresponse.v3.2+json';
             }else{
                 $content_type = 'application/vnd.spTargetingClause.v3+json';
             }
