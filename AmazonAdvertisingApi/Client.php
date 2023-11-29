@@ -10,8 +10,7 @@ require_once "Constants.php";
 
 class Client
 {
-    public const RETRY_SLEEP_TIME    = 5;
-    public const MAX_RETRIES         = 30;
+    public const MAX_RETRIES         = 5;
     public const SERVER_IS_BUSY_CODE = 'SERVER_IS_BUSY';
 
     public static $http_codes_temp_issue = [429, 500];
@@ -34,6 +33,7 @@ class Client
     private $endpoints          = null;
     private $versionStrings     = null;
     private $retryCounter       = 0;
+    private $retrySleepSecond   = 2;
     private $fullUrl = '';
     private $contentType = '';
     private $acceptHeader = '';
@@ -506,9 +506,17 @@ class Client
         $response_info   = $request->getInfo();
 
         if (in_array($response_info["http_code"], self::$http_codes_temp_issue) && $this->retryCounter < self::MAX_RETRIES) {
-            sleep(self::RETRY_SLEEP_TIME);
+            if (!empty($response_info['Retry-After']) && (int)$response_info['Retry-After'] < 100) {
+                $this->retrySleepSecond += (int)$response_info['Retry-After'];
+            } else {
+                $this->retrySleepSecond *= 2;
+            }
+
+            sleep($this->retrySleepSecond);
+
             $this->retryCounter++;
-            $this->_executeRequest($request);
+
+            return $this->_executeRequest($request);
         }
 
         $request->close();
@@ -526,6 +534,9 @@ class Client
                     $requestId = json_decode($response, true)["requestId"];
                 }
             }
+
+            $this->retryCounter = 0;
+            $this->retrySleepSecond = 2;
 
             return ["success"   => false,
                     "code"      => $response_info["http_code"],
