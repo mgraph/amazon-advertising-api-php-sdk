@@ -679,10 +679,10 @@ class Client
         
         if (stripos($interface, 'keywords') === 0) {
             if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
-                if (stripos($interface, 'keywords/list') === 0) {
-                    $content_type = 'application/vnd.sbkeyword.v3.2+json';
-                } else { // for create new "keyword"
+                if ($method == 'POST') { // for create new "keyword"
                     $content_type = 'application/vnd.sbkeywordresponse.v3+json';
+                } else {
+                    $content_type = 'application/vnd.sbkeyword.v3.2+json';
                 }
             }else{
                 $content_type = 'application/vnd.spKeyword.v3+json';
