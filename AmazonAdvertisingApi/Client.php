@@ -432,12 +432,12 @@ class Client
 
     private function _operation($interface, $params = [], $method = "GET", $campaintType = '')
     {
-        $content_type = $this->getContentType($interface, $campaintType);
+        $content_type = $this->getContentType($interface, $campaintType, $method);
         $accept_header = $content_type;
 
         // SB Issue: code:415, details: Cannot consume content type
         if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
-            if (in_array($interface, ['keywords', 'negativeKeywords', 'targets/list', 'negativeTargets/list'])) {
+            if (in_array($interface, ['keywords', 'negativeKeywords', 'targets/list', 'negativeTargets/list', 'negativeTargets'])) {
                 $content_type = 'application/json';
             }
         }
@@ -638,7 +638,7 @@ class Client
         throw new \Exception($message);
     }
 
-    private function getContentType($interface, $campaintType){
+    private function getContentType($interface, $campaintType, $method){
         $content_type = 'application/json';
 
         if (stripos($interface, 'snapshot') !== false) {
@@ -679,7 +679,11 @@ class Client
         
         if (stripos($interface, 'keywords') === 0) {
             if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
-                $content_type = 'application/vnd.sbkeyword.v3.2+json';
+                if (stripos($interface, 'keywords/list') === 0) {
+                    $content_type = 'application/vnd.sbkeyword.v3.2+json';
+                } else { // for create new "keyword"
+                    $content_type = 'application/vnd.sbkeywordresponse.v3+json';
+                }
             }else{
                 $content_type = 'application/vnd.spKeyword.v3+json';
             }
@@ -695,7 +699,11 @@ class Client
 
         if (stripos($interface, 'negativeKeywords') === 0) {
             if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
-                $content_type = 'application/vnd.sbnegativekeyword.v3.2+json';
+                if ($method == 'POST') {
+                    $content_type = 'application/vnd.sbkeywordresponse.v3+json';
+                } else {
+                    $content_type = 'application/vnd.sbnegativekeyword.v3.2+json';
+                }
             }else{
                 $content_type = 'application/vnd.spNegativeKeyword.v3+json';
             }
@@ -703,7 +711,12 @@ class Client
 
         if (stripos($interface, 'negativeTargets') === 0) {
             if ($campaintType == CampaignTypes::SPONSORED_BRANDS) {
-                $content_type = 'application/vnd.sblistnegativetargetsresponse.v3.2+json';
+                if (stripos($interface, 'negativeTargets/list') === 0) {
+                    $content_type = 'application/vnd.sblistnegativetargetsresponse.v3.2+json';
+                } else {
+                    // for create new "negative Target"
+                    $content_type = 'application/vnd.sbcreatenegativetargetsrequest.v3+json';
+                }
             }else{
                 $content_type = 'application/vnd.spNegativeTargetingClause.v3+json';
             }
