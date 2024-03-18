@@ -343,19 +343,30 @@ class Client
         return $this->_operation("campaignNegativeTargets/list", $data, "POST", $campaignType);
     }
 
-    // snapshot
-    public function requestSnapshot($recordType, $data = null, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
+    // exports (previously known as snapshot)
+    public function requestExport($recordType, $data = null)
     {
-        return $this->_operation("{$recordType}/snapshot", $data, "POST", $campaignType);
+        return $this->_operation("{$recordType}/export", $data, "POST");
     }
 
-    public function getSnapshot($snapshotId)
+    public function getExport($exportId, $record_type)
     {
-        $req = $this->_operation("snapshots/{$snapshotId}");
+        if ($record_type == 'campaigns') {
+            $content_type = 'application/vnd.campaignsexport.v1+json';
+        } elseif ($record_type == 'adGroups') {
+            $content_type = 'application/vnd.adgroupsexport.v1+json';
+        } elseif ($record_type == 'ads') {
+            $content_type = 'application/vnd.adsexport.v1+json';
+        } elseif ($record_type == 'targets') {
+            $content_type = 'application/vnd.targetsexport.v1+json';
+        }
+
+        $req = $this->_operation("exports/{$exportId}", [], 'GET', '', $content_type);
+
         if ($req["success"]) {
             $json = json_decode($req["response"], true);
-            if ($json["status"] == "SUCCESS") {
-                return $this->_download($json["location"]);
+            if ($json["status"] == "COMPLETED") {
+                return $this->_download($json["url"], true);
             }
         }
 
@@ -430,9 +441,12 @@ class Client
         return $this->_executeRequest($request);
     }
 
-    private function _operation($interface, $params = [], $method = "GET", $campaintType = '')
+    private function _operation($interface, $params = [], $method = "GET", $campaintType = '', $content_type = '')
     {
-        $content_type = $this->getContentType($interface, $campaintType, $method);
+        if (empty($content_type)) {
+            $content_type = $this->getContentType($interface, $campaintType, $method);
+        }
+        
         $accept_header = $content_type;
 
         // SB Issue: code:415, details: Cannot consume content type
@@ -734,7 +748,7 @@ class Client
             $content_type = 'application/vnd.spProductAd.v3+json';
         }
         
-        if (stripos($interface, 'ads') === 0) {
+        if (stripos($interface, 'ads/list') === 0) {
             $content_type = 'application/vnd.sbadresource.v4+json';
         }
 
@@ -744,6 +758,30 @@ class Client
             }else{
                 $content_type = 'application/vnd.spTargetingClause.v3+json';
             }
+        }
+
+        if (stripos($interface, 'exports/') !== false) {
+            $content_type = 'application/vnd.campaignsexport.v1+json';
+        }
+
+        if (stripos($interface, '/export') !== false) {
+
+            if (stripos($interface, 'campaigns/export') !== false) {
+                $content_type = 'application/vnd.campaignsexport.v1+json';
+            }
+
+            if (stripos($interface, 'adGroups/export') !== false) {
+                $content_type = 'application/vnd.adgroupsexport.v1+json';
+            }
+
+            if (stripos($interface, 'targets/export') !== false) {
+                $content_type = 'application/vnd.targetsexport.v1+json';
+            }
+
+            if (stripos($interface, 'ads/export') !== false) {
+                $content_type = 'application/vnd.adsexport.v1+json';
+            }
+
         }
 
         return $content_type;
