@@ -231,6 +231,22 @@ class Client
         return $this->_operation("keywords/list", $data, "POST", $campaignType);
     }
 
+    // Theme Targeting (SB only)
+    public function createBiddableThemes($data)
+    {
+        return $this->_operation("themes", $data, "POST", CampaignTypes::SPONSORED_BRANDS);
+    }
+
+    public function updateBiddableThemes($data)
+    {
+        return $this->_operation("themes", $data, "PUT", CampaignTypes::SPONSORED_PRODUCTS);
+    }
+
+    public function listBiddableThemes($data = null)
+    {
+        return $this->_operation("themes/list", $data, "POST", CampaignTypes::SPONSORED_BRANDS);
+    }
+
     // negativeKeywords
     public function createNegativeKeywords($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
@@ -454,6 +470,10 @@ class Client
             if (in_array($interface, ['keywords', 'negativeKeywords', 'targets/list', 'negativeTargets/list', 'negativeTargets'])) {
                 $content_type = 'application/json';
             }
+            
+            if (in_array($interface, ['themes', 'themes/list'])) {
+                $accept_header = '';
+            }
         }
 
         $headers = [
@@ -656,6 +676,10 @@ class Client
         $content_type = 'application/json';
 
         if (stripos($interface, 'snapshot') !== false) {
+            return $content_type;
+        }
+
+        if (stripos($interface, 'themes') !== false) {
             return $content_type;
         }
 
