@@ -185,6 +185,11 @@ class Client
         return $this->_operation("campaigns/list", $data, "POST", $campaignType);
     }
 
+    public function findCampaignOptimizationRules($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
+    {
+        return $this->_operation("rules/optimization/search", $data, "POST", $campaignType);
+    }
+
     // adGroups
     public function createAdGroups($data, $campaignType = CampaignTypes::SPONSORED_PRODUCTS)
     {
@@ -689,6 +694,10 @@ class Client
         
         if (stripos($interface, 'product/metadata') !== false) {
             return 'application/vnd.productmetadatarequest.v1+json';
+        }
+
+        if (stripos($interface, 'rules/optimization/search') !== false) {
+            return 'application/vnd.spoptimizationrules.v1+jso';
         }
 
         if (stripos($interface, 'reporting/reports') !== false) { // v3
