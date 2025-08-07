@@ -404,6 +404,21 @@ class Client
         return $this->_operation("reporting/reports", $data, "POST");
     }
 
+    public function createStreamSubscription($data)
+    {
+        return $this->_operation("streams/subscriptions", $data, "POST");
+    }
+
+    public function updateStreamSubscription($data)
+    {
+        return $this->_operation("streams/subscriptions", $data, "PUT");
+    }
+
+    public function listStreamSubscriptions($data = null)
+    {
+        return $this->_operation("streams/subscriptions", $data, "GET");
+    }
+
     public function getReport($reportId) // v2 & v3
     {
         if($this->apiVersion == 'v2'){
@@ -694,6 +709,10 @@ class Client
         
         if (stripos($interface, 'product/metadata') !== false) {
             return 'application/vnd.productmetadatarequest.v1+json';
+        }
+
+        if (stripos($interface, 'streams/subscriptions') !== false) {
+            return 'application/vnd.amazonmarketingstreamsubscriptions.v1+json';
         }
 
         if (stripos($interface, 'rules/optimization/search') !== false) {
