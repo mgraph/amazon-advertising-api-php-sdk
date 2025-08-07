@@ -409,9 +409,9 @@ class Client
         return $this->_operation("streams/subscriptions", $data, "POST");
     }
 
-    public function updateStreamSubscription($data)
+    public function updateStreamSubscription($subscriptionId, $data)
     {
-        return $this->_operation("streams/subscriptions", $data, "PUT");
+        return $this->_operation("streams/subscriptions/{$subscriptionId}", $data, "PUT");
     }
 
     public function listStreamSubscriptions($data = null)
